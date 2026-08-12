@@ -12,6 +12,10 @@ class DatabaseSeeder extends Seeder
             PerfilSeeder::class,
             CategoriaSeeder::class,
             UserSeeder::class,
+            AtrativoSeeder::class,
+            EventoSeeder::class,
+            IndicadorEsgSeeder::class,
+            EmpreendedorSeeder::class,
         ]);
     }
 }

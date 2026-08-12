@@ -13,30 +13,20 @@ class Roteiro extends Model
 
     protected $fillable = [
         'titulo',
+        'slug',
         'descricao',
-        'tema',
-        'duracao_horas',
-        'nivel_dificuldade', // facil, medio, dificil
-        'meio_transporte', // a_pe, bicicleta, carro, transporte_publico
-        'acessivel_pcd',
-        'orcamento_estimado',
-        'distancia_km',
+        'duracao_estimada_horas',
+        'nivel_dificuldade',
+        'atrativos_ids',
+        'perfil_publico_alvo',
         'gerado_por_ia',
-        'perfil_turista',
-        'status'
+        'ativo'
     ];
 
     protected $casts = [
-        'acessivel_pcd' => 'boolean',
+        'duracao_estimada_horas' => 'integer',
+        'atrativos_ids' => 'array',
         'gerado_por_ia' => 'boolean',
-        'orcamento_estimado' => 'decimal:2',
-        'distancia_km' => 'decimal:2'
+        'ativo' => 'boolean'
     ];
-
-    public function atrativos()
-    {
-        return $this->belongsToMany(Atrativo::class, 'roteiro_atrativo')
-                    ->withPivot('ordem', 'tempo_estimado_minutos')
-                    ->orderBy('pivot_ordem');
-    }
 }

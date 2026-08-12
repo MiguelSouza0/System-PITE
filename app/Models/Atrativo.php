@@ -13,41 +13,29 @@ class Atrativo extends Model
 
     protected $fillable = [
         'nome',
+        'slug',
         'descricao',
-        'contexto_historico',
+        'descricao_curta',
         'categoria_id',
-        'endereco',
-        'bairro',
         'latitude',
         'longitude',
+        'endereco',
         'horario_funcionamento',
-        'formas_acesso',
-        'tempo_medio_visita',
-        'valor_ingresso',
-        'telefone',
-        'email',
-        'site',
-        'acessibilidade_rampa',
-        'acessibilidade_elevador',
-        'acessibilidade_banheiro',
-        'acessibilidade_libras',
-        'acessibilidade_piso_tatil',
-        'orientacoes_seguranca',
-        'restricoes',
-        'status', // pendente, aprovado, suspenso
-        'destaque'
+        'preco_medio',
+        'niveis_acessibilidade',
+        'caracteristicas_esg',
+        'destaque',
+        'ativo'
     ];
 
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
-        'valor_ingresso' => 'decimal:2',
-        'acessibilidade_rampa' => 'boolean',
-        'acessibilidade_elevador' => 'boolean',
-        'acessibilidade_banheiro' => 'boolean',
-        'acessibilidade_libras' => 'boolean',
-        'acessibilidade_piso_tatil' => 'boolean',
-        'destaque' => 'boolean'
+        'preco_medio' => 'decimal:2',
+        'niveis_acessibilidade' => 'array',
+        'caracteristicas_esg' => 'array',
+        'destaque' => 'boolean',
+        'ativo' => 'boolean'
     ];
 
     public function categoria()
@@ -58,17 +46,5 @@ class Atrativo extends Model
     public function avaliacoes()
     {
         return $this->hasMany(Avaliacao::class);
-    }
-
-    public function midias()
-    {
-        return $this->hasMany(Midia::class, 'entidade_id')->where('entidade_tipo', 'atrativo');
-    }
-
-    public function roteiros()
-    {
-        return $this->belongsToMany(Roteiro::class, 'roteiro_atrativo')
-                    ->withPivot('ordem', 'tempo_estimado_minutos')
-                    ->orderBy('pivot_ordem');
     }
 }

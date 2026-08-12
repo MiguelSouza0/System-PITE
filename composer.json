@@ -47,6 +47,14 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        },
+        "audit": {
+            "block": false
+        },
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true

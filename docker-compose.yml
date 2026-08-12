@@ -12,6 +12,11 @@ services:
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: system_pite
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
     volumes:
       - .:/var/www/html
     depends_on:
@@ -25,6 +30,7 @@ services:
       POSTGRES_DB: system_pite
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:

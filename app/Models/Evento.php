@@ -13,34 +13,28 @@ class Evento extends Model
 
     protected $fillable = [
         'titulo',
+        'slug',
         'descricao',
-        'categoria_id',
         'data_inicio',
         'data_fim',
         'local',
-        'latitude',
-        'longitude',
+        'atrativo_id',
+        'preco_ingresso',
         'organizador',
-        'contato',
-        'capacidade',
         'gratuito',
-        'valor_ingresso',
-        'faixa_etaria',
-        'acessibilidade_descricao',
-        'status', // rascunho, aprovado, cancelado
-        'destaque'
+        'ativo'
     ];
 
     protected $casts = [
         'data_inicio' => 'datetime',
         'data_fim' => 'datetime',
         'gratuito' => 'boolean',
-        'destaque' => 'boolean',
-        'valor_ingresso' => 'decimal:2'
+        'ativo' => 'boolean',
+        'preco_ingresso' => 'decimal:2'
     ];
 
-    public function categoria()
+    public function atrativo()
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Atrativo::class);
     }
 }
