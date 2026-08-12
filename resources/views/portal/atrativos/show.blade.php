@@ -13,6 +13,13 @@
         </ol>
     </nav>
 
+    @if(session('sucessoAvaliacao'))
+    <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
+        <i class="bi bi-check-circle me-1"></i> {{ session('sucessoAvaliacao') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
@@ -20,7 +27,7 @@
                 <div class="card-body p-4 p-md-5">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">{{ $atrativo->categoria?->nome }}</span>
-                        @if($atrativo->preco_medio == 0)
+                        @if(($atrativo->preco_medio ?? 0) == 0)
                             <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill">Entrada Gratuita</span>
                         @else
                             <span class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-2 rounded-pill">Preço Médio: R$ {{ number_format($atrativo->preco_medio, 2, ',', '.') }}</span>
@@ -53,6 +60,41 @@
                         </div>
                     </div>
 
+                    <!-- Formulário para Enviar Avaliação -->
+                    <div class="card border-0 bg-light rounded-4 p-4 mb-4">
+                        <h5 class="fw-bold mb-3" style="font-family:'Outfit';"><i class="bi bi-star text-warning me-2"></i> Enviar Sua Avaliação Auditada</h5>
+                        <form action="{{ route('portal.atrativos.avaliar', $atrativo->slug) }}" method="POST">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Nota (1 a 5 Estrelas)</label>
+                                    <select name="nota" class="form-select rounded-3" required>
+                                        <option value="5">⭐⭐⭐⭐⭐ 5 - Excelente</option>
+                                        <option value="4">⭐⭐⭐⭐ 4 - Muito Bom</option>
+                                        <option value="3">⭐⭐⭐ 3 - Bom</option>
+                                        <option value="2">⭐⭐ 2 - Regular</option>
+                                        <option value="1">⭐ 1 - Ruim</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Sua Origem</label>
+                                    <select name="origem_turista" class="form-select rounded-3">
+                                        <option value="local">Morador Local</option>
+                                        <option value="nacional">Turista Nacional</option>
+                                        <option value="internacional">Turista Internacional</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Comentário / Experiência</label>
+                                    <textarea name="comentario" class="form-control rounded-3" rows="3" required placeholder="Conte como foi sua visita, acessibilidade, atendimento..."></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-pite px-4"><i class="bi bi-send me-1"></i> Publicar Avaliação</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <!-- Avaliações Verificadas (Zero Avaliações Falsas) -->
                     <div class="mt-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -64,7 +106,7 @@
                         @forelse($atrativo->avaliacoes ?? [] as $avaliacao)
                             <div class="border rounded-3 p-3 mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <strong>{{ $avaliacao->usuario?->name ?? 'Turista Anônimo (LGPD)' }}</strong>
+                                    <strong>{{ $avaliacao->usuario?->name ?? 'Turista Validado' }}</strong>
                                     <div class="text-warning">
                                         @for($i=1; $i<=5; $i++)
                                             <i class="bi {{ $i <= $avaliacao->nota ? 'bi-star-fill' : 'bi-star' }}"></i>
@@ -118,6 +160,16 @@
                 <a href="{{ route('portal.mapa') }}" class="btn btn-outline-primary w-100 rounded-3 fw-semibold">
                     <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
                 </a>
+            </div>
+
+            <!-- QR Code do Atrativo (Placa Física Municipal) -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center">
+                <h6 class="fw-bold mb-2" style="font-family:'Outfit';"><i class="bi bi-qr-code text-success me-1"></i> QR Code Oficial do Atrativo</h6>
+                <p class="small text-muted mb-3">Imprima ou escaneie o código para afixação na sinalização física do local.</p>
+                <div class="p-3 bg-light rounded-3 d-inline-block mx-auto mb-3">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(url()->current()) }}" alt="QR Code {{ $atrativo->nome }}" width="180" height="180" class="img-fluid">
+                </div>
+                <small class="d-block text-muted" style="font-size:0.75rem;">Guia histórico, audiodescrição e dados ESG acessíveis via smartphone.</small>
             </div>
         </div>
     </div>

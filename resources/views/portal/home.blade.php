@@ -5,11 +5,14 @@
 <style>
     .hero-pite {
         position: relative;
-        min-height: 92vh;
+        min-height: calc(100vh - 70px);
         display: flex;
         align-items: center;
         background: linear-gradient(160deg, #022c22 0%, #064e3b 30%, #047857 60%, #0d9488 100%);
         overflow: hidden;
+        padding-top: 48px;
+        padding-bottom: 64px;
+        box-sizing: border-box;
     }
     .hero-pite::before {
         content: '';

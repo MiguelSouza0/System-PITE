@@ -29,4 +29,15 @@ class Roteiro extends Model
         'gerado_por_ia' => 'boolean',
         'ativo' => 'boolean'
     ];
+
+    /**
+     * Atrativos do roteiro (via tabela pivot com ordem de visitação).
+     */
+    public function atrativos()
+    {
+        return $this->belongsToMany(Atrativo::class, 'roteiro_atrativo')
+                    ->withPivot('ordem', 'tempo_estimado', 'observacao')
+                    ->orderByPivot('ordem')
+                    ->withTimestamps();
+    }
 }

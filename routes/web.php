@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Portal\HomeController;
 use App\Http\Controllers\Portal\AtrativoController;
+use App\Http\Controllers\Portal\MapaController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AtrativoAdminController;
 use App\Http\Controllers\Auth\AuthController;
 
 /*
@@ -21,38 +23,56 @@ Route::get('/quick-login/{perfil}', [AuthController::class, 'quickLogin'])->name
 
 // --- PORTAL PÚBLICO (TURISTAS E CIDADÃOS) ---
 Route::get('/', [HomeController::class, 'index'])->name('portal.home');
+use App\Http\Controllers\Portal\AvaliacaoController;
+
 Route::get('/atrativos', [AtrativoController::class, 'index'])->name('portal.atrativos.index');
 Route::get('/atrativos/{slug}', [AtrativoController::class, 'show'])->name('portal.atrativos.show');
+Route::post('/atrativos/{slug}/avaliar', [AvaliacaoController::class, 'store'])->name('portal.atrativos.avaliar');
 
-Route::get('/mapa-interativo', function () {
-    return view('portal.mapa');
-})->name('portal.mapa');
+Route::get('/mapa-interativo', [MapaController::class, 'index'])->name('portal.mapa');
 
-Route::get('/roteiros-inteligentes', function () {
-    return view('portal.roteiros');
-})->name('portal.roteiros');
+use App\Http\Controllers\Portal\RoteiroController;
+use App\Http\Controllers\Portal\EventoController;
+
+Route::get('/roteiros-inteligentes', [RoteiroController::class, 'index'])->name('portal.roteiros');
+Route::post('/roteiros-inteligentes/gerar', [RoteiroController::class, 'gerar'])->name('portal.roteiros.gerar');
+
+Route::get('/eventos', [EventoController::class, 'index'])->name('portal.eventos.index');
+Route::get('/eventos/{slug}', [EventoController::class, 'show'])->name('portal.eventos.show');
 
 Route::get('/esg-transparencia', function () {
     return view('portal.esg');
 })->name('portal.esg');
 
+// --- API JSON para Mapa Interativo ---
+Route::get('/api/atrativos-mapa', [MapaController::class, 'atrativosJson'])->name('api.atrativos.mapa');
+
 
 // --- PAINEL DO EMPREENDEDOR LOCAL ---
-Route::middleware(['auth'])->prefix('empreendedor')->name('empreendedor.')->group(function () {
+Route::middleware(['auth', 'perfil:empreendedor'])->prefix('empreendedor')->name('empreendedor.')->group(function () {
     Route::get('/dashboard', function () {
         return view('empreendedor.dashboard');
     })->name('dashboard');
-    
+
     Route::get('/cadastro-estabelecimento', function () {
         return view('empreendedor.cadastro');
     })->name('cadastro');
 });
 
 
+use App\Http\Controllers\Admin\RelatorioController;
+
 // --- PAINEL ADMINISTRATIVO (PREFEITO, SECRETÁRIO, SERVIDOR) ---
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
+    // Exportação de Relatórios
+    Route::get('/relatorios/csv', [RelatorioController::class, 'exportarCsv'])->name('relatorios.csv');
+    Route::get('/relatorios/esg-pdf', [RelatorioController::class, 'exportarEsgPdf'])->name('relatorios.esg-pdf');
+
+    // CRUD de Atrativos
+    Route::resource('atrativos', AtrativoAdminController::class)->except(['show']);
+
     // Gestão de Empreendedores (Aprovação / Validação de Selos)
     Route::get('/empreendedores', function () {
         return view('admin.empreendedores.index');
@@ -62,7 +82,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/esg-indicadores', function () {
         return view('admin.esg.index');
     })->name('esg.index');
-    
+
     // Trilhas de Auditoria (Transparência Municipal)
     Route::get('/auditoria-logs', function () {
         return view('admin.auditoria.index');

@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             guests: '/login',
             users: '/admin/dashboard'
         );
+        $middleware->alias([
+            'perfil' => \App\Http\Middleware\CheckPerfil::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

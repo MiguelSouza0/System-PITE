@@ -356,6 +356,7 @@
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.home') }}">Início</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.atrativos.index') }}">Atrativos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.eventos.index') }}">Eventos</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.mapa') }}">Mapa</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.roteiros') }}"><i class="bi bi-stars me-1"></i>Roteiros IA</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.esg') }}">ESG</a></li>
