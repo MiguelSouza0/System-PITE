@@ -195,6 +195,14 @@
                         <div class="action-icon" style="background:rgba(4,120,87,0.08); color:var(--pite-emerald);"><i class="bi bi-check-circle"></i></div>
                         Aprovar Empreendedores
                     </a>
+                    <a href="{{ route('admin.atrativos.index') }}" class="action-btn">
+                        <div class="action-icon" style="background:rgba(13,148,136,0.08); color:var(--pite-teal);"><i class="bi bi-compass"></i></div>
+                        Gerenciar Atrativos
+                    </a>
+                    <a href="{{ route('admin.eventos.index') }}" class="action-btn">
+                        <div class="action-icon" style="background:rgba(244,63,94,0.08); color:var(--pite-coral);"><i class="bi bi-calendar-event"></i></div>
+                        Gerenciar Eventos
+                    </a>
                     <a href="{{ route('admin.esg.index') }}" class="action-btn">
                         <div class="action-icon" style="background:rgba(5,150,105,0.08); color:#059669;"><i class="bi bi-plus-circle"></i></div>
                         Cadastrar Métrica ESG

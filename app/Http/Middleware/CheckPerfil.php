@@ -19,7 +19,7 @@ class CheckPerfil
             return redirect()->route('login');
         }
 
-        $perfilUsuario = strtolower(auth()->user()->perfil->nome ?? '');
+        $perfilUsuario = strtolower(auth()->user()->perfil->slug ?? '');
 
         if (!in_array($perfilUsuario, $perfis)) {
             abort(403, 'Acesso não autorizado para o perfil: ' . $perfilUsuario);
