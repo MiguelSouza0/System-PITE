@@ -43,7 +43,6 @@
                     <option value="">Todos</option>
                     <option value="ativo" {{ request('status') == 'ativo' ? 'selected' : '' }}>Ativo</option>
                     <option value="inativo" {{ request('status') == 'inativo' ? 'selected' : '' }}>Inativo</option>
-                    <option value="rascunho" {{ request('status') == 'rascunho' ? 'selected' : '' }}>Rascunho</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -72,14 +71,11 @@
                         <td class="fw-semibold">{{ $at->nome }}</td>
                         <td><span class="badge bg-light text-dark rounded-pill">{{ $at->categoria->nome ?? '—' }}</span></td>
                         <td>
-                            @php
-                                $statusClass = match($at->status) {
-                                    'ativo' => 'bg-success',
-                                    'inativo' => 'bg-danger',
-                                    default => 'bg-secondary',
-                                };
-                            @endphp
-                            <span class="badge {{ $statusClass }} rounded-pill">{{ ucfirst($at->status) }}</span>
+                            @if($at->ativo)
+                                <span class="badge bg-success rounded-pill">Ativo</span>
+                            @else
+                                <span class="badge bg-danger rounded-pill">Inativo</span>
+                            @endif
                         </td>
                         <td>
                             @if(isset($at->niveis_acessibilidade['cadeirante']) && $at->niveis_acessibilidade['cadeirante'])

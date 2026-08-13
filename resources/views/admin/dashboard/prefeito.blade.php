@@ -208,8 +208,8 @@
                                 <td class="fw-semibold">{{ $at->nome }}</td>
                                 <td><span class="badge bg-light text-dark">{{ $at->categoria->nome ?? '—' }}</span></td>
                                 <td>
-                                    <span class="badge badge-status-{{ $at->status == 'ativo' ? 'aprovado' : 'pendente' }} px-2 py-1 rounded-pill">
-                                        {{ ucfirst($at->status) }}
+                                    <span class="badge badge-status-{{ $at->ativo ? 'aprovado' : 'pendente' }} px-2 py-1 rounded-pill">
+                                        {{ $at->ativo ? 'Ativo' : 'Inativo' }}
                                     </span>
                                 </td>
                                 <td class="text-muted small">{{ $at->created_at->format('d/m/Y') }}</td>

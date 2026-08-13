@@ -41,7 +41,7 @@ class RelatorioController extends Controller
                     $at->latitude,
                     $at->longitude,
                     $at->horario_funcionamento,
-                    $at->status
+                    $at->ativo ? 'Ativo' : 'Inativo'
                 ]);
             }
 
@@ -58,7 +58,7 @@ class RelatorioController extends Controller
     {
         $indicadores = IndicadorEsg::all();
         $empreendedores = Empreendedor::where('status_aprovacao', 'aprovado')->get();
-        $atrativosCount = Atrativo::where('status', 'ativo')->count();
+        $atrativosCount = Atrativo::where('ativo', true)->count();
 
         return view('admin.relatorios.esg_pdf', compact('indicadores', 'empreendedores', 'atrativosCount'));
     }
