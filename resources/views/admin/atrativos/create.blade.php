@@ -156,11 +156,10 @@
         <h6 class="fw-bold mb-3" style="font-family:'Outfit';"><i class="bi bi-toggle-on text-warning me-2"></i>Status</h6>
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <select name="status" class="form-select rounded-3">
-                    <option value="ativo" {{ $atrativo->status == 'ativo' ? 'selected' : '' }}>✅ Ativo</option>
-                    <option value="inativo" {{ $atrativo->status == 'inativo' ? 'selected' : '' }}>🚫 Inativo</option>
-                    <option value="rascunho" {{ $atrativo->status == 'rascunho' ? 'selected' : '' }}>📝 Rascunho</option>
-                </select>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="ativo" id="ativo" value="1" {{ $atrativo->ativo ? 'checked' : '' }}>
+                    <label class="form-check-label fw-semibold" for="ativo">Atrativo Ativo</label>
+                </div>
             </div>
         </div>
         @endif

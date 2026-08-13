@@ -6,6 +6,9 @@ use App\Http\Controllers\Portal\AtrativoController;
 use App\Http\Controllers\Portal\MapaController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AtrativoAdminController;
+use App\Http\Controllers\Admin\EmpreendedorAdminController;
+use App\Http\Controllers\Admin\EventoAdminController;
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Auth\AuthController;
 
 /*
@@ -74,9 +77,13 @@ Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admi
     Route::resource('atrativos', AtrativoAdminController::class)->except(['show']);
 
     // Gestão de Empreendedores (Aprovação / Validação de Selos)
-    Route::get('/empreendedores', function () {
-        return view('admin.empreendedores.index');
-    })->name('empreendedores.index');
+    Route::get('/empreendedores', [EmpreendedorAdminController::class, 'index'])->name('empreendedores.index');
+    Route::post('/empreendedores/{empreendedor}/aprovar', [EmpreendedorAdminController::class, 'aprovar'])->name('empreendedores.aprovar');
+    Route::post('/empreendedores/{empreendedor}/rejeitar', [EmpreendedorAdminController::class, 'rejeitar'])->name('empreendedores.rejeitar');
+    Route::post('/empreendedores/{empreendedor}/revogar-selo', [EmpreendedorAdminController::class, 'revogarSelo'])->name('empreendedores.revogar');
+
+    // CRUD de Eventos
+    Route::resource('eventos', EventoAdminController::class)->except(['show']);
 
     // Gestão ESG e Relatórios
     Route::get('/esg-indicadores', function () {
@@ -84,7 +91,5 @@ Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admi
     })->name('esg.index');
 
     // Trilhas de Auditoria (Transparência Municipal)
-    Route::get('/auditoria-logs', function () {
-        return view('admin.auditoria.index');
-    })->name('auditoria.index');
+    Route::get('/auditoria-logs', [AuditoriaController::class, 'index'])->name('auditoria.index');
 });

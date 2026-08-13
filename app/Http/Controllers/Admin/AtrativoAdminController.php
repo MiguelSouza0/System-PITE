@@ -22,7 +22,7 @@ class AtrativoAdminController extends Controller
             $query->where('categoria_id', $request->categoria);
         }
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('ativo', $request->status === 'ativo');
         }
 
         $atrativos = $query->latest()->paginate(15);
@@ -55,7 +55,7 @@ class AtrativoAdminController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['nome']);
-        $validated['status'] = 'ativo';
+        $validated['ativo'] = true;
         $validated['niveis_acessibilidade'] = [
             'cadeirante' => $request->boolean('acess_cadeirante'),
             'visual' => $request->boolean('acess_visual'),
@@ -94,7 +94,7 @@ class AtrativoAdminController extends Controller
             'contato_email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'tempo_medio_visita' => 'nullable|string|max:100',
-            'status' => 'nullable|in:ativo,inativo,rascunho',
+            'ativo' => 'nullable|boolean',
         ]);
 
         $antes = $atrativo->toArray();
@@ -120,7 +120,7 @@ class AtrativoAdminController extends Controller
         $antes = $atrativo->toArray();
 
         // Exclusão lógica (conforme documentação)
-        $atrativo->update(['status' => 'inativo']);
+        $atrativo->update(['ativo' => false]);
 
         Auditoria::registrar('desativou', 'atrativos', $atrativo->id, $antes, $atrativo->fresh()->toArray());
 

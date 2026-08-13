@@ -29,7 +29,7 @@ class DashboardController extends Controller
         // --- Contadores reais ---
         $stats = [
             'total_atrativos'          => Atrativo::count(),
-            'atrativos_ativos'         => Atrativo::where('status', 'ativo')->count(),
+            'atrativos_ativos'         => Atrativo::where('ativo', true)->count(),
             'total_empreendedores'     => Empreendedor::count(),
             'empreendedores_aprovados' => Empreendedor::where('status_aprovacao', 'aprovado')->count(),
             'empreendedores_pendentes' => Empreendedor::where('status_aprovacao', 'pendente')->count(),
