@@ -102,14 +102,21 @@ class RoteiroController extends Controller
         });
 
         // Roteiros relacionados
-        $roteirosRelacionados = Roteiro::where('id', '!=', $roteiro->id)
-            ->where('ativo', true)
-            ->where(function ($q) use ($roteiro) {
-                $q->where('tema', $roteiro->tema)
-                  ->orWhere('nivel_dificuldade', $roteiro->nivel_dificuldade);
-            })
-            ->take(3)
-            ->get();
+        $roteirosRelacionadosQuery = Roteiro::where('id', '!=', $roteiro->id)
+            ->where('ativo', true);
+
+        if (!empty($roteiro->tema) || !empty($roteiro->nivel_dificuldade)) {
+            $roteirosRelacionadosQuery->where(function ($q) use ($roteiro) {
+                if (!empty($roteiro->tema)) {
+                    $q->where('tema', $roteiro->tema);
+                }
+                if (!empty($roteiro->nivel_dificuldade)) {
+                    $q->orWhere('nivel_dificuldade', $roteiro->nivel_dificuldade);
+                }
+            });
+        }
+
+        $roteirosRelacionados = $roteirosRelacionadosQuery->take(3)->get();
 
         // Lista completa de atrativos para o modal de adição de pontos
         $todosAtrativos = Atrativo::where('ativo', true)->get()->map(function($at) {
