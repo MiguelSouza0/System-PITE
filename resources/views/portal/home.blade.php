@@ -353,18 +353,21 @@
 <section class="py-5" style="background: linear-gradient(135deg, #022c22, #064e3b);" data-animate>
     <div class="container">
         <div class="row align-items-center g-4">
-            <div class="col-lg-8 text-white">
+            <div class="col-lg-7 text-white">
                 <div class="chip mb-3" style="background: rgba(245,158,11,0.15); color: #fbbf24;">
                     <i class="bi bi-person-plus"></i> Cadastro Gratuito
                 </div>
-                <h2 class="section-title" style="font-size: 2rem;">Crie seu perfil e personalize sua experiência</h2>
-                <p style="color: rgba(255,255,255,0.7); max-width: 500px; line-height: 1.7;">
-                    Salve favoritos, registre visitas, avalie experiências e receba recomendações personalizadas por inteligência artificial.
+                <h2 class="section-title" style="font-size: 2rem;">Faça parte do ecossistema turístico</h2>
+                <p style="color: rgba(255,255,255,0.7); max-width: 540px; line-height: 1.7;">
+                    Turistas personalizam roteiros com IA e salvam favoritos. Empreendedores cadastram seus estabelecimentos para receber o Selo de Validação Municipal.
                 </p>
             </div>
-            <div class="col-lg-4 text-lg-end">
+            <div class="col-lg-5 text-lg-end d-flex flex-column flex-sm-row justify-content-lg-end gap-2">
                 <a href="{{ route('turista.registro') }}" class="btn btn-pite-gold btn-lg">
-                    <i class="bi bi-rocket-takeoff me-2"></i> Criar Minha Conta
+                    <i class="bi bi-person-heart me-2"></i> Criar Conta Turista
+                </a>
+                <a href="{{ route('empreendedor.registro') }}" class="btn btn-outline-light btn-lg rounded-4">
+                    <i class="bi bi-shop me-2"></i> Sou Empreendedor
                 </a>
             </div>
         </div>

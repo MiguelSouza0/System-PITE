@@ -900,6 +900,7 @@
                         <li><a href="{{ route('portal.roteiros') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.7rem;"></i> Roteiros Inteligentes</a></li>
                         <li><a href="{{ route('portal.esg') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.7rem;"></i> Transparência ESG</a></li>
                         <li><a href="{{ route('portal.mapa') }}"><i class="bi bi-chevron-right me-1" style="font-size:0.7rem;"></i> Mapa Interativo</a></li>
+                        <li><a href="{{ route('empreendedor.dashboard') }}"><i class="bi bi-shop me-1" style="font-size:0.7rem;"></i> Espaço do Empreendedor</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4">

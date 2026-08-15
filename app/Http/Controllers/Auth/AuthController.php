@@ -24,9 +24,22 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $request->boolean('remember') || $request->boolean('lembrar'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+            $user = Auth::user();
+            $user->load('perfil');
+
+            if ($user->isTurista()) {
+                return redirect()->route('turista.dashboard');
+            }
+            if ($user->isEmpreendedor()) {
+                return redirect()->route('empreendedor.dashboard');
+            }
+            if ($user->isPrefeito() || $user->isSecretario() || $user->isServidor() || $user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('portal.home');
         }
 
         return back()->withErrors([

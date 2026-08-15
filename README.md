@@ -134,17 +134,21 @@ System-PITE/
    - **Mapa Interativo**: [http://localhost:8000/mapa-interativo](http://localhost:8000/mapa-interativo)
    - **Roteiros IA**: [http://localhost:8000/roteiros-inteligentes](http://localhost:8000/roteiros-inteligentes)
    - **Painel ESG**: [http://localhost:8000/esg-transparencia](http://localhost:8000/esg-transparencia)
+   - **Espaço do Empreendedor**: [http://localhost:8000/empreendedor/dashboard](http://localhost:8000/empreendedor/dashboard)
+   - **Cadastro de Estabelecimento**: [http://localhost:8000/empreendedor/cadastro-estabelecimento](http://localhost:8000/empreendedor/cadastro-estabelecimento)
    - **Painel Administrativo**: [http://localhost:8000/admin/dashboard](http://localhost:8000/admin/dashboard)
 
 ---
 
 ## 🔑 Credenciais de Teste (Seeders)
 
-| Perfil                           | E-mail                                  | Senha Padrão      |
-| :------------------------------- | :-------------------------------------- | :----------------- |
-| **Prefeito Municipal**     | `prefeito@municipio.gov.br`           | `SenhaPITE2026!` |
-| **Secretário de Turismo** | `secretario.turismo@municipio.gov.br` | `SenhaPITE2026!` |
-| **Servidor Técnico**      | `tecnico.turismo@municipio.gov.br`    | `SenhaPITE2026!` |
+| Perfil | E-mail | Senha Padrão | Acesso Rápido |
+| :--- | :--- | :--- | :--- |
+| **Prefeito Municipal** | `prefeito@municipio.gov.br` | `SenhaPITE2026!` | [Quick Login](http://localhost:8000/quick-login/prefeito) |
+| **Secretário de Turismo** | `secretario.turismo@municipio.gov.br` | `SenhaPITE2026!` | [Quick Login](http://localhost:8000/quick-login/secretario) |
+| **Servidor Técnico** | `tecnico.turismo@municipio.gov.br` | `SenhaPITE2026!` | [Quick Login](http://localhost:8000/quick-login/servidor) |
+| **Empreendedor Local** | `pousada.recanto@email.com` | `SenhaPITE2026!` | [Quick Login](http://localhost:8000/quick-login/empreendedor) |
+| **Turista / Cidadão** | `turista@email.com` | `SenhaPITE2026!` | [Quick Login](http://localhost:8000/quick-login/turista) |
 
 ---
 

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AprovacaoController;
 use App\Http\Controllers\Admin\RelatorioController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empreendedor\EmpreendedorDashboardController;
+use App\Http\Controllers\Portal\TuristaAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,11 +21,20 @@ use App\Http\Controllers\Empreendedor\EmpreendedorDashboardController;
 |--------------------------------------------------------------------------
 */
 
-// --- AUTENTICAÇÃO E ACESSO RÁPIDO ---
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+// --- AUTENTICAÇÃO UNIFICADA E ACESSO RÁPIDO (TELA ÚNICA) ---
+Route::get('/login', [TuristaAuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [TuristaAuthController::class, 'login']);
+Route::get('/turista/login', [TuristaAuthController::class, 'showLogin'])->name('turista.login');
+Route::post('/turista/login', [TuristaAuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/quick-login/{perfil}', [AuthController::class, 'quickLogin'])->name('quick-login');
+
+// --- CADASTRO DE CONTAS (TURISTA E EMPREENDEDOR) ---
+Route::get('/turista/registro', [TuristaAuthController::class, 'showRegistro'])->name('turista.registro');
+Route::post('/turista/registro', [TuristaAuthController::class, 'registro']);
+Route::get('/empreendedor/registro', [TuristaAuthController::class, 'showRegistroEmpreendedor'])->name('empreendedor.registro');
+Route::post('/empreendedor/registro', [TuristaAuthController::class, 'registroEmpreendedor'])->name('empreendedor.registro.store');
+Route::get('/cadastre-se', [TuristaAuthController::class, 'showRegistro'])->name('cadastre-se');
 
 
 // --- PORTAL PÚBLICO (TURISTAS E CIDADÃOS) ---
@@ -71,14 +81,7 @@ Route::get('/esg-transparencia', function () {
     return view('portal.esg');
 })->name('portal.esg');
 
-// --- AUTENTICAÇÃO DO TURISTA ---
-use App\Http\Controllers\Portal\TuristaAuthController;
 use App\Http\Controllers\Portal\TuristaDashboardController;
-
-Route::get('/turista/registro', [TuristaAuthController::class, 'showRegistro'])->name('turista.registro');
-Route::post('/turista/registro', [TuristaAuthController::class, 'registro']);
-Route::get('/turista/login', [TuristaAuthController::class, 'showLogin'])->name('turista.login');
-Route::post('/turista/login', [TuristaAuthController::class, 'login']);
 
 // --- PAINEL DO TURISTA (autenticado) ---
 Route::middleware(['auth', 'perfil:turista'])->prefix('turista')->name('turista.')->group(function () {
