@@ -15,18 +15,23 @@
 
                 <div class="card-body p-4 p-md-5">
                     @if (session('error'))
-                        <div class="alert alert-danger rounded-3 small">
-                            {{ session('error') }}
+                        <div class="alert alert-danger rounded-3 small d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 fs-5"></i>
+                            <div>{{ session('error') }}</div>
                         </div>
                     @endif
 
                     @if ($errors->any())
-                        <div class="alert alert-danger rounded-3 small">
-                            <ul class="mb-0 ps-3">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
+                        <div class="alert alert-danger rounded-3 small d-flex align-items-start gap-2">
+                            <i class="bi bi-shield-x flex-shrink-0 fs-5 mt-1"></i>
+                            <div>
+                                <strong>Erro ao acessar:</strong>
+                                <ul class="mb-0 ps-3 mt-1">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                     @endif
 

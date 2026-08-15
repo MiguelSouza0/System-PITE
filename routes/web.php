@@ -49,6 +49,7 @@ Route::get('/esg-transparencia', function () {
 
 // --- API JSON para Mapa Interativo ---
 Route::get('/api/atrativos-mapa', [MapaController::class, 'atrativosJson'])->name('api.atrativos.mapa');
+Route::get('/api/eventos-mapa', [MapaController::class, 'eventosJson'])->name('api.eventos.mapa');
 
 
 // --- PAINEL DO EMPREENDEDOR LOCAL ---

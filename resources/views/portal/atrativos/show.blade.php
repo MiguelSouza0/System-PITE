@@ -157,7 +157,7 @@
                 <a href="{{ route('portal.roteiros') }}" class="btn btn-warning w-100 rounded-3 fw-bold mb-2">
                     <i class="bi bi-magic me-1"></i> Incluir no Meu Roteiro IA
                 </a>
-                <a href="{{ route('portal.mapa') }}" class="btn btn-outline-primary w-100 rounded-3 fw-semibold">
+                <a href="{{ route('portal.mapa', ['lat' => $atrativo->latitude, 'lng' => $atrativo->longitude, 'atrativo' => $atrativo->id]) }}" class="btn btn-outline-primary w-100 rounded-3 fw-semibold">
                     <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
                 </a>
             </div>

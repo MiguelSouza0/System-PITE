@@ -30,7 +30,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'As credenciais fornecidas não conferem com nossos registros.',
+            'email' => 'Usuário ou senha incorretos. Verifique os dados digitados.',
         ])->onlyInput('email');
     }
 

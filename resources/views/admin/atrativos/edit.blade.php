@@ -3,6 +3,5 @@
 @section('title', 'Editar Atrativo — System-PITE')
 
 @section('content')
-{{-- Reutiliza o mesmo formulário do create, injetando $atrativo --}}
-@include('admin.atrativos.create')
-@overwrite
+@include('admin.atrativos._form')
+@endsection

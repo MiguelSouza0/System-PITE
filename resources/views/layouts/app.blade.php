@@ -362,7 +362,16 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.esg') }}">ESG</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('empreendedor.dashboard') }}" class="btn btn-nav-outline"><i class="bi bi-shop me-1"></i> Empreendedor</a>
+                    @auth
+                        <form action="{{ route('logout') }}" method="POST" class="d-inline m-0 p-0">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold">
+                                <i class="bi bi-box-arrow-right me-1"></i> Sair
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('empreendedor.dashboard') }}" class="btn btn-nav-outline"><i class="bi bi-shop me-1"></i> Empreendedor</a>
+                    @endauth
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-nav-primary"><i class="bi bi-grid-1x2 me-1"></i> Gestão</a>
                 </div>
             </div>
