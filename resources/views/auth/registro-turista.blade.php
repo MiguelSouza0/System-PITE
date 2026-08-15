@@ -148,11 +148,32 @@
                         <span>Histórico completo da sua jornada turística</span>
                     </div>
                 </div>
+
+                {{-- Card de Destaque para Empreendedores Locais --}}
+                <div class="mt-4 p-3 rounded-4" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-warning text-dark px-2 py-1 small fw-bold">🏪 Espaço do Empreendedor</span>
+                    </div>
+                    <p class="small text-white text-opacity-90 mb-2">Possui pousada, restaurante, artesanato ou atua como guia?</p>
+                    <a href="{{ route('empreendedor.registro') }}" class="btn btn-warning btn-sm rounded-pill fw-bold text-dark w-100">
+                        <i class="bi bi-shop me-1"></i> Cadastrar Meu Estabelecimento
+                    </a>
+                </div>
             </div>
 
             {{-- Lado Direito: Formulário --}}
             <div class="col-lg-7 animate-in animate-delay-2">
                 <div class="registro-card">
+                    {{-- Alternância de Perfil (Turista vs Empreendedor) --}}
+                    <div class="d-flex p-1 mb-4 rounded-4" style="background: #f1f5f9;">
+                        <a href="{{ route('turista.registro') }}" class="btn w-50 rounded-4 py-2 small fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm" style="background: #fff; color: var(--pite-emerald);">
+                            <i class="bi bi-person-heart text-success"></i> Sou Turista / Cidadão
+                        </a>
+                        <a href="{{ route('empreendedor.registro') }}" class="btn w-50 rounded-4 py-2 small fw-bold d-flex align-items-center justify-content-center gap-2 text-muted" style="background: transparent;">
+                            <i class="bi bi-shop text-warning"></i> Sou Empreendedor Local
+                        </a>
+                    </div>
+
                     {{-- Step Indicator --}}
                     <div class="step-indicator">
                         <div class="step-dot active" id="stepDot1">1</div>

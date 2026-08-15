@@ -75,6 +75,14 @@
                                 <span><i class="bi bi-person-gear text-info me-2"></i> Entrar como <strong>Técnico / Servidor</strong></span>
                                 <span class="badge bg-secondary">Operação & Auditoria</span>
                             </a>
+                            <a href="{{ route('quick-login', 'empreendedor') }}" class="btn btn-outline-warning btn-sm rounded-pill text-start px-3 d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-shop text-warning me-2"></i> Entrar como <strong>Empreendedor Local</strong></span>
+                                <span class="badge bg-warning text-dark">Autocadastro & Selo</span>
+                            </a>
+                            <a href="{{ route('quick-login', 'turista') }}" class="btn btn-outline-danger btn-sm rounded-pill text-start px-3 d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-heart-fill text-danger me-2"></i> Entrar como <strong>Turista</strong></span>
+                                <span class="badge bg-danger">Painel de Viagens</span>
+                            </a>
                         </div>
                     </div>
                 </div>

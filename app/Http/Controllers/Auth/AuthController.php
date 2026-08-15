@@ -26,6 +26,13 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $user = Auth::user();
+            if ($user->isEmpreendedor()) {
+                return redirect()->intended(route('empreendedor.dashboard'));
+            }
+            if ($user->isTurista()) {
+                return redirect()->intended(route('turista.dashboard'));
+            }
             return redirect()->intended(route('admin.dashboard'));
         }
 
