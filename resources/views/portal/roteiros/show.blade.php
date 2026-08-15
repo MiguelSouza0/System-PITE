@@ -69,8 +69,73 @@
         70% { box-shadow: 0 0 0 16px rgba(14,165,233,0); }
         100% { box-shadow: 0 0 0 0 rgba(14,165,233,0); }
     }
+    /* Drag-and-drop Sortable */
+    .timeline-full-step {
+        cursor: grab;
+        user-select: none;
+        position: relative;
+    }
+    .timeline-full-step:active {
+        cursor: grabbing;
+    }
+    .timeline-full-step.sortable-ghost {
+        opacity: 0.35;
+        background: rgba(4,120,87,0.1) !important;
+        border: 2px dashed var(--pite-emerald) !important;
+        border-radius: 14px;
+    }
+    .timeline-full-step.sortable-chosen {
+        transform: scale(1.02);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+    .timeline-full-step.sortable-drag {
+        opacity: 0.95;
+        cursor: grabbing !important;
+    }
+    .drag-handle-badge {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        cursor: grab;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 5;
+        border: 1px solid #cbd5e1;
+    }
+    .timeline-editing .drag-handle-badge {
+        background: #047857;
+        color: #ffffff;
+        border-color: #047857;
+        box-shadow: 0 2px 8px rgba(4,120,87,0.3);
+    }
+    .timeline-editing .timeline-full-step .card {
+        border: 1.5px dashed var(--pite-emerald) !important;
+        background: #f0fdf4 !important;
+    }
+    .timeline-edit-toolbar {
+        display: none;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .timeline-edit-toolbar.active { display: flex; }
+    .btn-step-actions {
+        display: none;
+        gap: 6px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(4,120,87,0.2);
+    }
+    .timeline-editing .btn-step-actions { display: flex; }
     @media print {
-        .navbar-pite, .a11y-bar, .footer-pite, #gpsTrackerBtn, #audioPlayerBox, #btnSalvarOffline, .btn-print-hide {
+        .navbar-pite, .a11y-bar, .footer-pite, #gpsTrackerBtn, #audioPlayerBox, #btnSalvarOffline, .btn-print-hide, .timeline-edit-toolbar, .drag-handle-badge, .btn-step-actions {
             display: none !important;
         }
         body { background: #fff !important; color: #000 !important; }
@@ -320,16 +385,35 @@
         <div class="col-lg-5">
 
             <!-- Linha do Tempo Ordenada de Visitação -->
-            <div class="info-card mb-4">
-                <h5 class="fw-bold mb-1" style="font-family:'Outfit';"><i class="bi bi-list-ol text-success me-2"></i>Ordem Sugerida de Visitação</h5>
-                <p class="small text-muted mb-4">Sequência otimizada geograficamente para minimizar deslocamentos</p>
+            <div class="info-card mb-4" id="ordemVisitacaoCard">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h5 class="fw-bold mb-0" style="font-family:'Outfit';"><i class="bi bi-list-ol text-success me-2"></i>Ordem Sugerida de Visitação</h5>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="btnEditarOrdem">
+                        <i class="bi bi-pencil-square me-1"></i> Editar Ordem
+                    </button>
+                </div>
+                <p class="small text-muted mb-2">Sequência otimizada geograficamente para minimizar deslocamentos</p>
 
-                <div class="timeline-full">
+                <!-- Toolbar de Edição (oculta por padrão) -->
+                <div class="timeline-edit-toolbar mb-3" id="editToolbar">
+                    <button class="btn btn-sm btn-success rounded-pill px-3" id="btnAdicionarPonto">
+                        <i class="bi bi-plus-circle me-1"></i> Adicionar Ponto
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnResetarOrdem">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Resetar Original
+                    </button>
+                    <small class="text-muted d-flex align-items-center ms-auto"><i class="bi bi-grip-vertical me-1"></i> Arraste para reordenar</small>
+                </div>
+
+                <div class="timeline-full" id="timelineSortable">
                     @forelse($roteiro->atrativos as $index => $atrativo)
-                    <div class="timeline-full-step" id="step-card-{{ $atrativo->id }}">
-                        <div class="step-pin">{{ $index + 1 }}</div>
+                    <div class="timeline-full-step" id="step-card-{{ $atrativo->id }}" data-atrativo-id="{{ $atrativo->id }}" data-lat="{{ $atrativo->latitude }}" data-lng="{{ $atrativo->longitude }}">
+                        <div class="step-pin step-pin-num">{{ $index + 1 }}</div>
+                        <span class="drag-handle-badge" title="Clique e arraste este card para reordenar">
+                            <i class="bi bi-grip-vertical fs-6"></i> Arraste
+                        </span>
                         <div class="card border-0 bg-light rounded-3 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1 pe-4">
                                 <span class="badge bg-success-subtle text-success fw-bold" style="font-size:0.72rem;">
                                     ⏱️ Parada: {{ $atrativo->pivot->tempo_estimado ?? '45min' }}
                                 </span>
@@ -356,11 +440,43 @@
                                     Ver Ficha <i class="bi bi-arrow-up-right"></i>
                                 </a>
                             </div>
+
+                            <!-- Botões de Reordenação e Remoção no Modo Edição -->
+                            <div class="btn-step-actions justify-content-end align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 btn-move-up" style="font-size:0.72rem;" title="Mover para cima">
+                                    <i class="bi bi-arrow-up me-1"></i>Subir
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 btn-move-down" style="font-size:0.72rem;" title="Mover para baixo">
+                                    <i class="bi bi-arrow-down me-1"></i>Descer
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0 btn-remove-step ms-auto" style="font-size:0.72rem;" title="Remover parada">
+                                    <i class="bi bi-trash me-1"></i>Remover
+                                </button>
+                            </div>
                         </div>
                     </div>
                     @empty
                     <p class="text-muted small">Nenhum atrativo associado a este roteiro.</p>
                     @endforelse
+                </div>
+            </div>
+
+            <!-- Modal Adicionar Ponto -->
+            <div class="modal fade" id="modalAdicionarPonto" tabindex="-1">
+                <div class="modal-dialog modal-dialog-scrollable">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold" style="font-family:'Outfit';"><i class="bi bi-plus-circle text-success me-2"></i>Adicionar Ponto ao Roteiro</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" class="form-control form-control-sm rounded-3 mb-3" id="buscaAddPonto" placeholder="🔍 Buscar atrativo por nome...">
+                            <div id="listaAtrativosAdd" class="d-flex flex-column gap-2" style="max-height: 360px; overflow-y: auto;"></div>
+                            <div id="loadingAtrativos" class="text-center py-4 text-muted">
+                                <span class="spinner-border spinner-border-sm me-1"></span> Carregando atrativos...
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -406,10 +522,12 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const atrativosData = @json($atrativosMapData);
+    let atrativosData = @json($atrativosMapData);
     const polylineCoords = @json($roteiro->polylines_coordenadas ?? []);
+    const todosAtrativosDisponiveis = @json($todosAtrativos ?? []);
 
     if (atrativosData.length === 0) return;
 
@@ -423,57 +541,310 @@ document.addEventListener('DOMContentLoaded', function() {
         attribution: '© OpenStreetMap | System-PITE'
     }).addTo(map);
 
-    // Marcadores numerados customizados
     const markersGroup = L.featureGroup().addTo(map);
-    const coordsArray = [];
+    let polyline = null;
 
-    atrativosData.forEach((at, index) => {
-        coordsArray.push([at.lat, at.lng]);
+    // Função para renderizar os marcadores e a linha de rota no mapa
+    function renderMapRoute(currentPoints) {
+        markersGroup.clearLayers();
+        if (polyline) map.removeLayer(polyline);
 
-        const iconHtml = `
-            <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #047857, #0d9488); border:3px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; font-family:'Outfit', sans-serif;">
-                ${at.ordem}
+        const coordsArray = [];
+
+        currentPoints.forEach((at, index) => {
+            coordsArray.push([at.lat, at.lng]);
+            const ordemNum = index + 1;
+
+            const iconHtml = `
+                <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #047857, #0d9488); border:3px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; font-family:'Outfit', sans-serif;">
+                    ${ordemNum}
+                </div>
+            `;
+
+            const customIcon = L.divIcon({
+                className: 'numbered-pin',
+                html: iconHtml,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+                popupAnchor: [0, -18]
+            });
+
+            const marker = L.marker([at.lat, at.lng], { icon: customIcon });
+            marker.bindPopup(`
+                <div style="min-width:200px; font-family:'Inter', sans-serif;">
+                    <span class="badge bg-success mb-1">Parada ${ordemNum}</span>
+                    <h6 style="font-family:'Outfit'; font-weight:700; margin:4px 0;">${at.nome}</h6>
+                    <p style="font-size:12px; color:#64748b; margin-bottom:8px;">${at.descricao || ''}</p>
+                    ${at.tempo_estimado ? `<div style="font-size:11px; margin-bottom:6px;">⏱️ Tempo sugerido: <strong>${at.tempo_estimado}</strong></div>` : ''}
+                    <a href="${at.url || '#'}" target="_blank" class="btn btn-sm btn-success w-100 py-1" style="font-size:11px;">Ver Detalhes</a>
+                </div>
+            `);
+
+            markersGroup.addLayer(marker);
+        });
+
+        if (coordsArray.length > 0) {
+            polyline = L.polyline(coordsArray, {
+                color: '#047857',
+                weight: 5,
+                opacity: 0.85,
+                dashArray: '8, 8',
+                lineJoin: 'round'
+            }).addTo(map);
+
+            map.fitBounds(markersGroup.getBounds().pad(0.2));
+        }
+    }
+
+    // Renderização Inicial do Mapa
+    renderMapRoute(atrativosData);
+
+    // 2. Drag and Drop SortableJS na Timeline
+    const timelineContainer = document.getElementById('timelineSortable');
+    const initialTimelineHTML = timelineContainer ? timelineContainer.innerHTML : '';
+    let sortableInstance = null;
+
+    if (timelineContainer && typeof Sortable !== 'undefined') {
+        sortableInstance = new Sortable(timelineContainer, {
+            animation: 250,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            filter: 'a, button, .btn, input',
+            preventOnFilter: false,
+            fallbackTolerance: 3,
+            touchStartThreshold: 3,
+            onEnd: function() {
+                atualizarOrdemERota();
+            }
+        });
+    }
+
+    // Atualiza pins, lista interna e a rota no mapa
+    function atualizarOrdemERota() {
+        if (!timelineContainer) return;
+        const stepElements = timelineContainer.querySelectorAll('.timeline-full-step');
+        const novosPontos = [];
+
+        stepElements.forEach((step, index) => {
+            const numPin = step.querySelector('.step-pin-num');
+            if (numPin) numPin.textContent = index + 1;
+
+            const lat = parseFloat(step.dataset.lat);
+            const lng = parseFloat(step.dataset.lng);
+            const nomeElement = step.querySelector('h6 a');
+            const nome = nomeElement ? nomeElement.textContent.trim() : 'Ponto ' + (index + 1);
+            const url = nomeElement ? nomeElement.getAttribute('href') : '#';
+            const descElement = step.querySelector('p');
+            const descricao = descElement ? descElement.textContent.trim() : '';
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+                novosPontos.push({
+                    id: step.dataset.atrativoId,
+                    lat: lat,
+                    lng: lng,
+                    nome: nome,
+                    descricao: descricao,
+                    url: url
+                });
+            }
+        });
+
+        atrativosData = novosPontos;
+        renderMapRoute(novosPontos);
+    }
+
+    // Botão Alternar Modo Edição
+    const btnEditar = document.getElementById('btnEditarOrdem');
+    const editToolbar = document.getElementById('editToolbar');
+    const ordemCard = document.getElementById('ordemVisitacaoCard');
+    let modoEdicao = false;
+
+    if (btnEditar) {
+        btnEditar.addEventListener('click', function() {
+            modoEdicao = !modoEdicao;
+            if (modoEdicao) {
+                ordemCard.classList.add('timeline-editing');
+                editToolbar.classList.add('active');
+                btnEditar.classList.remove('btn-outline-success');
+                btnEditar.classList.add('btn-success');
+                btnEditar.innerHTML = '<i class="bi bi-check-lg me-1"></i> Concluir Edição';
+            } else {
+                ordemCard.classList.remove('timeline-editing');
+                editToolbar.classList.remove('active');
+                btnEditar.classList.remove('btn-success');
+                btnEditar.classList.add('btn-outline-success');
+                btnEditar.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Editar Ordem';
+            }
+        });
+    }
+
+    // Controles de Reordenação por Botões (Subir, Descer) e Remoção da timeline
+    if (timelineContainer) {
+        timelineContainer.addEventListener('click', function(e) {
+            const moveUpBtn = e.target.closest('.btn-move-up');
+            const moveDownBtn = e.target.closest('.btn-move-down');
+            const removeBtn = e.target.closest('.btn-remove-step');
+
+            if (moveUpBtn) {
+                const step = moveUpBtn.closest('.timeline-full-step');
+                const prevStep = step ? step.previousElementSibling : null;
+                if (step && prevStep && prevStep.classList.contains('timeline-full-step')) {
+                    timelineContainer.insertBefore(step, prevStep);
+                    atualizarOrdemERota();
+                }
+            } else if (moveDownBtn) {
+                const step = moveDownBtn.closest('.timeline-full-step');
+                const nextStep = step ? step.nextElementSibling : null;
+                if (step && nextStep && nextStep.classList.contains('timeline-full-step')) {
+                    timelineContainer.insertBefore(nextStep, step);
+                    atualizarOrdemERota();
+                }
+            } else if (removeBtn) {
+                const step = removeBtn.closest('.timeline-full-step');
+                if (step) {
+                    step.remove();
+                    atualizarOrdemERota();
+                }
+            }
+        });
+    }
+
+    // Resetar para a Ordem Original
+    const btnResetar = document.getElementById('btnResetarOrdem');
+    if (btnResetar) {
+        btnResetar.addEventListener('click', function() {
+            if (timelineContainer && initialTimelineHTML) {
+                timelineContainer.innerHTML = initialTimelineHTML;
+                atualizarOrdemERota();
+            }
+        });
+    }
+
+    // Modal Adicionar Ponto
+    const btnAdicionarPonto = document.getElementById('btnAdicionarPonto');
+    const modalEl = document.getElementById('modalAdicionarPonto');
+    const modalAdicionarPonto = modalEl ? new bootstrap.Modal(modalEl) : null;
+    const listaAtrativosAdd = document.getElementById('listaAtrativosAdd');
+    const loadingAtrativos = document.getElementById('loadingAtrativos');
+    const buscaAddPonto = document.getElementById('buscaAddPonto');
+
+    if (btnAdicionarPonto && modalAdicionarPonto) {
+        btnAdicionarPonto.addEventListener('click', function() {
+            modalAdicionarPonto.show();
+            carregarAtrativosParaAdicionar();
+        });
+    }
+
+    function carregarAtrativosParaAdicionar(filtro = '') {
+        if (!listaAtrativosAdd) return;
+        if (loadingAtrativos) loadingAtrativos.style.display = 'none';
+        listaAtrativosAdd.innerHTML = '';
+
+        const idsNaTimeline = Array.from(timelineContainer.querySelectorAll('.timeline-full-step'))
+            .map(el => String(el.dataset.atrativoId));
+
+        const filtrados = todosAtrativosDisponiveis.filter(at => {
+            return !filtro || at.nome.toLowerCase().includes(filtro.toLowerCase()) || (at.endereco && at.endereco.toLowerCase().includes(filtro.toLowerCase()));
+        });
+
+        if (filtrados.length === 0) {
+            listaAtrativosAdd.innerHTML = '<div class="text-center text-muted py-3 small">Nenhum atrativo encontrado.</div>';
+            return;
+        }
+
+        filtrados.forEach(at => {
+            const jaAdicionado = idsNaTimeline.includes(String(at.id));
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center';
+            div.innerHTML = `
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark" style="font-size:0.9rem;">${at.nome}</h6>
+                    <small class="text-muted" style="font-size:0.78rem;">📍 ${at.endereco}</small>
+                </div>
+                <button class="btn btn-sm ${jaAdicionado ? 'btn-outline-secondary' : 'btn-success'} rounded-pill px-3 btn-add-this" ${jaAdicionado ? 'disabled' : ''} data-id="${at.id}">
+                    ${jaAdicionado ? 'Adicionado' : '<i class="bi bi-plus"></i> Adicionar'}
+                </button>
+            `;
+
+            div.querySelector('.btn-add-this')?.addEventListener('click', function() {
+                adicionarAtrativoNaTimeline(at);
+                this.disabled = true;
+                this.textContent = 'Adicionado';
+                this.className = 'btn btn-sm btn-outline-secondary rounded-pill px-3';
+            });
+
+            listaAtrativosAdd.appendChild(div);
+        });
+    }
+
+    if (buscaAddPonto) {
+        buscaAddPonto.addEventListener('input', function() {
+            carregarAtrativosParaAdicionar(this.value.trim());
+        });
+    }
+
+    function adicionarAtrativoNaTimeline(at) {
+        if (!timelineContainer) return;
+        const totalSteps = timelineContainer.querySelectorAll('.timeline-full-step').length + 1;
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'timeline-full-step';
+        stepDiv.id = `step-card-${at.id}`;
+        stepDiv.dataset.atrativoId = at.id;
+        stepDiv.dataset.lat = at.lat;
+        stepDiv.dataset.lng = at.lng;
+
+        stepDiv.innerHTML = `
+            <div class="step-pin step-pin-num">${totalSteps}</div>
+            <span class="drag-handle-badge" title="Clique e arraste este card para reordenar">
+                <i class="bi bi-grip-vertical fs-6"></i> Arraste
+            </span>
+            <div class="card border-0 bg-light rounded-3 p-3">
+                <div class="d-flex justify-content-between align-items-start mb-1 pe-4">
+                    <span class="badge bg-success-subtle text-success fw-bold" style="font-size:0.72rem;">
+                        ⏱️ Parada: 45min
+                    </span>
+                    ${at.acessivel ? '<span class="badge bg-light text-muted border" style="font-size:0.68rem;">♿ PNE</span>' : ''}
+                </div>
+                <h6 class="fw-bold mb-1" style="font-family:'Outfit';">
+                    <a href="${at.url}" target="_blank" class="text-dark text-decoration-none hover-emerald">
+                        ${at.nome}
+                    </a>
+                </h6>
+                <p class="small text-muted mb-2" style="font-size:0.84rem; line-height:1.5;">
+                    ${at.descricao}
+                </p>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <small class="text-muted" style="font-size:0.75rem;"><i class="bi bi-pin-map text-danger me-1"></i>${at.endereco}</small>
+                    <a href="${at.url}" target="_blank" class="small text-success fw-bold text-decoration-none">
+                        Ver Ficha <i class="bi bi-arrow-up-right"></i>
+                    </a>
+                </div>
+
+                <!-- Botões de Reordenação e Remoção no Modo Edição -->
+                <div class="btn-step-actions justify-content-end align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 btn-move-up" style="font-size:0.72rem;" title="Mover para cima">
+                        <i class="bi bi-arrow-up me-1"></i>Subir
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 btn-move-down" style="font-size:0.72rem;" title="Mover para baixo">
+                        <i class="bi bi-arrow-down me-1"></i>Descer
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0 btn-remove-step ms-auto" style="font-size:0.72rem;" title="Remover parada">
+                        <i class="bi bi-trash me-1"></i>Remover
+                    </button>
+                </div>
             </div>
         `;
 
-        const customIcon = L.divIcon({
-            className: 'numbered-pin',
-            html: iconHtml,
-            iconSize: [34, 34],
-            iconAnchor: [17, 17],
-            popupAnchor: [0, -18]
-        });
+        timelineContainer.appendChild(stepDiv);
+        atualizarOrdemERota();
+    }
 
-        const marker = L.marker([at.lat, at.lng], { icon: customIcon });
-
-        marker.bindPopup(`
-            <div style="min-width:200px; font-family:'Inter', sans-serif;">
-                <span class="badge bg-success mb-1">Parada ${at.ordem}</span>
-                <h6 style="font-family:'Outfit'; font-weight:700; margin:4px 0;">${at.nome}</h6>
-                <p style="font-size:12px; color:#64748b; margin-bottom:8px;">${at.descricao}</p>
-                <div style="font-size:11px; margin-bottom:6px;">⏱️ Tempo sugerido: <strong>${at.tempo_estimado}</strong></div>
-                <a href="${at.url}" target="_blank" class="btn btn-sm btn-success w-100 py-1" style="font-size:11px;">Ver Detalhes</a>
-            </div>
-        `);
-
-        markersGroup.addLayer(marker);
-    });
-
-    // Traçado da Linha de Rota (Polyline)
-    const lineCoords = (polylineCoords && polylineCoords.length > 0) ? polylineCoords : coordsArray;
-    const polyline = L.polyline(lineCoords, {
-        color: '#047857',
-        weight: 5,
-        opacity: 0.85,
-        dashArray: '8, 8',
-        lineJoin: 'round'
-    }).addTo(map);
-
-    map.fitBounds(markersGroup.getBounds().pad(0.2));
-
-    // 2. GPS em Tempo Real
+    // 2. GPS em Tempo Real — Alta Precisão
     let userMarker = null;
+    let userAccuracyCircle = null;
     let watchId = null;
+    let gpsCentered = false;
     const gpsBtn = document.getElementById('btnGpsTracker');
     const gpsDistanceInfo = document.getElementById('gpsDistanceInfo');
 
@@ -487,6 +858,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
+                gpsCentered = false;
+                if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+                if (userAccuracyCircle) { map.removeLayer(userAccuracyCircle); userAccuracyCircle = null; }
                 gpsBtn.classList.remove('btn-primary');
                 gpsBtn.classList.add('btn-outline-primary');
                 gpsBtn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Minha Posição (GPS)';
@@ -494,40 +868,80 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Rastreando GPS...';
+            gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Obtendo sinal GPS...';
 
             watchId = navigator.geolocation.watchPosition(
                 function(pos) {
                     const uLat = pos.coords.latitude;
                     const uLng = pos.coords.longitude;
+                    const accuracy = pos.coords.accuracy; // metros
 
+                    // Criar ou atualizar marcador do usuário
                     if (!userMarker) {
                         const userIcon = L.divIcon({
                             className: 'user-gps-pin',
-                            html: `<div class="pulse-gps" style="width:20px; height:20px; border-radius:50%; background:#0ea5e9; border:3px solid #fff; box-shadow:0 0 10px rgba(14,165,233,0.8);"></div>`,
-                            iconSize: [20, 20],
-                            iconAnchor: [10, 10]
+                            html: `<div class="pulse-gps" style="width:22px; height:22px; border-radius:50%; background:#0ea5e9; border:3px solid #fff; box-shadow:0 0 12px rgba(14,165,233,0.8);"></div>`,
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
                         });
-                        userMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(map);
-                        userMarker.bindTooltip('Você está aqui!', { permanent: true, direction: 'top' });
+                        userMarker = L.marker([uLat, uLng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+                        userMarker.bindTooltip('Você está aqui!', { permanent: true, direction: 'top', offset: [0, -14] });
                     } else {
                         userMarker.setLatLng([uLat, uLng]);
                     }
 
+                    // Círculo de precisão (raio = accuracy em metros)
+                    if (!userAccuracyCircle) {
+                        userAccuracyCircle = L.circle([uLat, uLng], {
+                            radius: accuracy,
+                            color: '#0ea5e9',
+                            fillColor: '#0ea5e9',
+                            fillOpacity: 0.1,
+                            weight: 1.5,
+                            dashArray: '4,4'
+                        }).addTo(map);
+                    } else {
+                        userAccuracyCircle.setLatLng([uLat, uLng]);
+                        userAccuracyCircle.setRadius(accuracy);
+                    }
+
+                    // Centralizar mapa na primeira leitura de boa qualidade
+                    if (!gpsCentered) {
+                        map.setView([uLat, uLng], 16, { animate: true });
+                        gpsCentered = true;
+                    }
+
+                    // Indicador de precisão no botão
+                    const precIcon = accuracy <= 30 ? '🟢' : accuracy <= 100 ? '🟡' : '🟠';
                     gpsBtn.classList.remove('btn-outline-primary');
                     gpsBtn.classList.add('btn-primary');
-                    gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> GPS Ativo';
+                    gpsBtn.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i> GPS Ativo ${precIcon} ±${Math.round(accuracy)}m`;
 
-                    // Calcular distância até a primeira parada
-                    const p1 = atrativosData[0];
-                    const distKm = calcularDistancia(uLat, uLng, p1.lat, p1.lng);
-                    gpsDistanceInfo.textContent = `📍 Você está a ${distKm.toFixed(1)} km do ponto 1 (${p1.nome})`;
+                    // Calcular distância até a parada MAIS PRÓXIMA
+                    let nearest = null;
+                    let nearestDist = Infinity;
+                    atrativosData.forEach(p => {
+                        const d = calcularDistancia(uLat, uLng, p.lat, p.lng);
+                        if (d < nearestDist) { nearestDist = d; nearest = p; }
+                    });
+
+                    if (nearest) {
+                        const distTxt = nearestDist < 1
+                            ? `${Math.round(nearestDist * 1000)}m`
+                            : `${nearestDist.toFixed(1)} km`;
+                        gpsDistanceInfo.textContent = `📍 Parada mais próxima: ${nearest.nome} (${distTxt})`;
+                    }
                 },
                 function(err) {
                     gpsBtn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Minha Posição (GPS)';
-                    alert('Não foi possível obter sua localização GPS.');
+                    const msgs = {
+                        1: 'Permissão de localização negada. Habilite nas configurações do navegador.',
+                        2: 'Posição indisponível. Tente em local aberto ou conecte-se a uma rede Wi-Fi.',
+                        3: 'Tempo esgotado ao obter localização. Tente novamente.'
+                    };
+                    alert(msgs[err.code] || 'Erro ao obter localização GPS.');
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
             );
         });
     }

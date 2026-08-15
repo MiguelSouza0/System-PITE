@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiConversa;
+use App\Models\AiPlanoTurismo;
 use App\Models\Atrativo;
 use App\Models\Categoria;
 use App\Services\AiItineraryService;
@@ -19,23 +21,222 @@ class AiAssistantController extends Controller
 
     /**
      * Endpoint do Assistente Virtual ("Guia PITE IA").
-     * Responde dúvidas em linguagem natural baseando-se estritamente na base oficial municipal.
+     * Responde dúvidas em linguagem natural e persiste no banco se o usuário estiver autenticado.
      */
     public function chat(Request $request)
     {
         $request->validate([
             'mensagem' => 'required|string|max:500',
-            'idioma' => 'nullable|string|in:pt,en,es'
+            'idioma' => 'nullable|string|in:pt,en,es',
+            'sessao_id' => 'nullable|string|max:64',
         ]);
 
         $pergunta = $request->input('mensagem');
         $idioma = $request->input('idioma', 'pt');
+        $sessaoId = $request->input('sessao_id') ?? 'anon-' . session()->getId();
+        $user = $request->user();
 
-        $resposta = $this->aiService->responderDuvidaTurista($pergunta, $idioma);
+        // 1. Processar a pergunta pelo serviço de IA
+        $resposta = $this->aiService->responderDuvidaTurista($pergunta, $idioma, $user);
+
+        // 2. Persistir conversa no banco se o usuário estiver autenticado
+        if ($user) {
+            // Salvar mensagem do usuário
+            AiConversa::create([
+                'user_id' => $user->id,
+                'sessao_id' => $sessaoId,
+                'remetente' => 'user',
+                'mensagem' => $pergunta,
+                'idioma' => $idioma,
+            ]);
+
+            // Salvar resposta do bot
+            AiConversa::create([
+                'user_id' => $user->id,
+                'sessao_id' => $sessaoId,
+                'remetente' => 'bot',
+                'mensagem' => $resposta['resposta'],
+                'dados_extras' => [
+                    'cards' => $resposta['cards'] ?? [],
+                    'sugestoes' => $resposta['sugestoes'] ?? [],
+                    'dados_extras' => $resposta['dados_extras'] ?? null,
+                ],
+                'idioma' => $idioma,
+            ]);
+        }
 
         return response()->json([
             'sucesso' => true,
+            'sessao_id' => $sessaoId,
             'dados' => $resposta
+        ]);
+    }
+
+    /**
+     * Carrega o histórico de mensagens salvas da sessão do usuário autenticado.
+     */
+    public function carregarHistorico(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['sucesso' => true, 'mensagens' => []]);
+        }
+
+        $sessaoId = $request->input('sessao_id');
+
+        $query = AiConversa::where('user_id', $user->id);
+        if ($sessaoId) {
+            $query->where('sessao_id', $sessaoId);
+        }
+
+        $conversas = $query->orderBy('created_at', 'asc')->get();
+
+        $mensagensFormatted = $conversas->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'remetente' => $c->remetente,
+                'mensagem' => $c->mensagem,
+                'dados_extras' => $c->dados_extras,
+                'idioma' => $c->idioma,
+                'data' => $c->created_at->format('H:i'),
+            ];
+        });
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagens' => $mensagensFormatted
+        ]);
+    }
+
+    /**
+     * Limpa o histórico de chat da sessão ativa.
+     */
+    public function limparHistorico(Request $request)
+    {
+        $user = $request->user();
+        if ($user) {
+            $sessaoId = $request->input('sessao_id');
+            $query = AiConversa::where('user_id', $user->id);
+            if ($sessaoId) {
+                $query->where('sessao_id', $sessaoId);
+            }
+            $query->delete();
+        }
+
+        return response()->json(['sucesso' => true, 'mensagem' => 'Histórico limpo com sucesso.']);
+    }
+
+    // --- PAINEL DE PLANOS DE TURISMO PERSONALIZADOS ---
+
+    /**
+     * Salva um novo plano de turismo gerado pela IA na conta do turista.
+     */
+    public function salvarPlano(Request $request)
+    {
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descricao' => 'nullable|string|max:1000',
+            'dias' => 'required|integer|min:1|max:30',
+            'itens' => 'required|array',
+            'preferencias' => 'nullable|array',
+            'sessao_chat_id' => 'nullable|string|max:64',
+        ]);
+
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => 'É necessário estar autenticado para salvar um plano de viagem.'
+            ], 401);
+        }
+
+        $plano = AiPlanoTurismo::create([
+            'user_id' => $user->id,
+            'titulo' => $request->titulo,
+            'descricao' => $request->descricao ?? 'Plano personalizado criado com o Guia PITE IA.',
+            'dias' => $request->dias,
+            'itens' => $request->itens,
+            'preferencias' => $request->preferencias,
+            'status' => 'ativo',
+            'sessao_chat_id' => $request->sessao_chat_id,
+        ]);
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Plano de turismo salvo com sucesso!',
+            'plano' => $plano
+        ], 201);
+    }
+
+    /**
+     * Lista os planos salvos do usuário autenticado.
+     */
+    public function listarPlanos(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Não autenticado.'], 401);
+        }
+
+        $planos = AiPlanoTurismo::doUsuario($user->id)->latest()->get();
+
+        return response()->json([
+            'sucesso' => true,
+            'planos' => $planos
+        ]);
+    }
+
+    /**
+     * Retorna os detalhes de um plano específico.
+     */
+    public function detalharPlano(int $id, Request $request)
+    {
+        $user = $request->user();
+        $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
+
+        return response()->json([
+            'sucesso' => true,
+            'plano' => $plano,
+            'itens_por_dia' => $plano->itensPorDia()
+        ]);
+    }
+
+    /**
+     * Atualiza itens ou metadados de um plano de turismo existente.
+     */
+    public function atualizarPlano(int $id, Request $request)
+    {
+        $user = $request->user();
+        $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
+
+        $request->validate([
+            'titulo' => 'sometimes|string|max:255',
+            'descricao' => 'sometimes|nullable|string',
+            'status' => 'sometimes|in:rascunho,ativo,concluido,arquivado',
+            'itens' => 'sometimes|array',
+        ]);
+
+        $plano->update($request->only(['titulo', 'descricao', 'status', 'itens']));
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Plano atualizado com sucesso!',
+            'plano' => $plano
+        ]);
+    }
+
+    /**
+     * Remove ou arquiva um plano salvo.
+     */
+    public function excluirPlano(int $id, Request $request)
+    {
+        $user = $request->user();
+        $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
+        $plano->delete();
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Plano removido com sucesso.'
         ]);
     }
 
@@ -52,7 +253,6 @@ class AiAssistantController extends Controller
         $texto = $request->input('texto');
         $para = $request->input('para_idioma');
 
-        // Dicionário contextual de termos turísticos municipais para tradução instantânea e fidedigna
         $traducoesComuns = [
             'en' => [
                 'Patrimônio Histórico e Cultural' => 'Historical and Cultural Heritage',
@@ -61,26 +261,6 @@ class AiAssistantController extends Controller
                 'Hospedagem e Hotelaria' => 'Hospitality & Hotels',
                 'Eventos e Festividades' => 'Events & Festivals',
                 'Artesanato e Comércio Local' => 'Handicraft & Local Commerce',
-                'Entrada Gratuita' => 'Free Admission',
-                'Preço Médio' => 'Average Price',
-                'Horário de Funcionamento' => 'Opening Hours',
-                'Acessível para PNE' => '100% Accessible (PNE)',
-                'Rampas de Acesso' => 'Access Ramps',
-                'Banheiro Adaptado' => 'Accessible Restrooms',
-                'Piso Tátil Direcional' => 'Tactile Paving',
-                'Áudio-Guia Integrado' => 'Integrated Audio Guide',
-                'Terça a Domingo' => 'Tuesday to Sunday',
-                'Todos os dias' => 'Every day',
-                'das 08h às 18h' => 'from 8:00 AM to 6:00 PM',
-                'das 07h às 17h' => 'from 7:00 AM to 5:00 PM',
-                'Conjunto arquitetônico colonial preservado do século XVIII, com visitas guiadas, feiras de artesanato típico e apresentações culturais semanais.' =>
-                    'Preserved 18th-century colonial architectural ensemble with guided tours, traditional craft fairs, and weekly cultural performances.',
-                'Reserva municipal com 4 quedas d\'água cristalinas, trilhas ecológicas sinalizadas e infraestrutura de pontes acessíveis com baixo impacto ambiental.' =>
-                    'Municipal nature reserve with 4 crystal-clear waterfalls, signposted ecological trails, and eco-friendly accessible bridge infrastructure.',
-                'Ponto de encontro dos produtores familiares, queijos artesanais, doces típicos e pratos regionais premiados.' =>
-                    'Meeting point for family farmers, artisanal cheeses, traditional sweets, and award-winning regional dishes.',
-                'Vista panorâmica 360 graus de todo o vale municipal, pôr do sol espetacular e passarela panorâmica com piso de vidro de alta segurança.' =>
-                    '360-degree panoramic view of the municipal valley, spectacular sunset, and high-security glass-bottom scenic walkway.'
             ],
             'es' => [
                 'Patrimônio Histórico e Cultural' => 'Patrimonio Histórico y Cultural',
@@ -89,26 +269,6 @@ class AiAssistantController extends Controller
                 'Hospedagem e Hotelaria' => 'Hospedaje y Hotelería',
                 'Eventos e Festividades' => 'Eventos y Festividades',
                 'Artesanato e Comércio Local' => 'Artesanías y Comercio Local',
-                'Entrada Gratuita' => 'Entrada Gratuita',
-                'Preço Médio' => 'Precio Medio',
-                'Horário de Funcionamento' => 'Horario de Atención',
-                'Acessível para PNE' => 'Accesible para personas con discapacidad',
-                'Rampas de Acesso' => 'Rampas de Acceso',
-                'Banheiro Adaptado' => 'Baños Adaptados',
-                'Piso Tátil Direcional' => 'Piso Podotáctil',
-                'Áudio-Guia Integrado' => 'Audioguía Integrada',
-                'Terça a Domingo' => 'Martes a Domingo',
-                'Todos os dias' => 'Todos los días',
-                'das 08h às 18h' => 'de 08:00 a 18:00',
-                'das 07h às 17h' => 'de 07:00 a 17:00',
-                'Conjunto arquitetônico colonial preservado do século XVIII, com visitas guiadas, feiras de artesanato típico e apresentações culturais semanais.' =>
-                    'Conjunto arquitectónico colonial preservado del siglo XVIII, con visitas guiadas, ferias de artesanía típica y presentaciones culturales semanales.',
-                'Reserva municipal com 4 quedas d\'água cristalinas, trilhas ecológicas sinalizadas e infraestrutura de pontes acessíveis com baixo impacto ambiental.' =>
-                    'Reserva municipal con 4 cascadas cristalinas, senderos ecológicos señalizados e infraestructura accesible de bajo impacto ambiental.',
-                'Ponto de encontro dos produtores familiares, queijos artesanais, doces típicos e pratos regionais premiados.' =>
-                    'Punto de encuentro de agricultores familiares, quesos artesanales, dulces típicos y premiados platos regionales.',
-                'Vista panorâmica 360 graus de todo o vale municipal, pôr do sol espetacular e passarela panorâmica com piso de vidro de alta segurança.' =>
-                    'Vista panorámica de 360 grados de todo el valle municipal, espectacular puesta de sol y pasarela panorámica de vidrio de alta seguridad.'
             ]
         ];
 
@@ -116,7 +276,6 @@ class AiAssistantController extends Controller
         if (isset($traducoesComuns[$para][$texto])) {
             $traducao = $traducoesComuns[$para][$texto];
         } else {
-            // Substituição contextual de termos comuns
             if (isset($traducoesComuns[$para])) {
                 foreach ($traducoesComuns[$para] as $termoOrig => $termoDest) {
                     $traducao = str_ireplace($termoOrig, $termoDest, $traducao);

@@ -63,6 +63,16 @@ class User extends Authenticatable
         return $this->hasMany(HistoricoVisita::class);
     }
 
+    public function aiConversas()
+    {
+        return $this->hasMany(AiConversa::class);
+    }
+
+    public function aiPlanos()
+    {
+        return $this->hasMany(AiPlanoTurismo::class);
+    }
+
     public function avaliacoes()
     {
         return $this->hasMany(Avaliacao::class);

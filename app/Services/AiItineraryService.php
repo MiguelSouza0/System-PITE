@@ -9,6 +9,7 @@ use App\Models\Empreendedor;
 use App\Models\Evento;
 use App\Models\Notificacao;
 use App\Models\Roteiro;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -331,13 +332,39 @@ class AiItineraryService
      * Interpreta em linguagem natural e responde com base estrita na base de dados oficial.
      * Suporte a Português, Inglês e Espanhol.
      */
-    public function responderDuvidaTurista(string $pergunta, string $idioma = 'pt'): array
+    public function responderDuvidaTurista(string $pergunta, string $idioma = 'pt', ?User $user = null): array
     {
         $perguntaLimpa = mb_strtolower(trim($pergunta));
 
         // 1. Identificação de Intenção
         $intencao = 'geral';
-        if (preg_match('/(evento|festa|show|agenda|programa|festival|quando)/i', $perguntaLimpa)) {
+        if (preg_match('/(cria|crie|gerar|gera|montar|monte|faça|faca|construa|montagem) (um |o )?(plano|roteiro|itinerario|itinerário)/i', $perguntaLimpa) || preg_match('/(plano|roteiro|itinerario|itinerário) (personalizado|sob medida|de \d+ dia)/i', $perguntaLimpa)) {
+            $intencao = 'criar_plano_turismo';
+        } elseif (preg_match('/(mude|muda|altere|altera|edite|edita|troque|troca|substitua|modifique|modifica) (o|meu|este|no)? (plano|roteiro|dia|passeio|item|atrativo)/i', $perguntaLimpa)) {
+            $intencao = 'editar_plano_turismo';
+        } elseif (preg_match('/(recife|olinda|natal|fortaleza|rio de janeiro|sao paulo|são paulo|salvador|campina grande|maceio|maceió|pipa|noronha|gramado|florianopolis|florianópolis|curitiba|brasilia|brasília|belo horizonte|manaus|belem|belém|foz do igua|porto de galinhas|maragogi|outra cidade|outras cidades|fora de joao|fora de joão|fora de jampa|em outra cidade|noutra cidade|outros municipios|outros municípios|outra regiao|outra região|outro estado|outros estados)/i', $perguntaLimpa)) {
+            $intencao = 'outra_cidade';
+        } elseif (preg_match('/^(oi|ola|olá|bom dia|boa tarde|boa noite|hey|hello|hi|hola|fala|opa|tudo bem|tudo bom)(\s|!|\.|\?|$)/i', $perguntaLimpa) || in_array($perguntaLimpa, ['oi', 'ola', 'olá', 'bom dia', 'boa tarde', 'boa noite', 'hey', 'hello', 'hi', 'hola', 'fala', 'opa'])) {
+            $intencao = 'saudacao';
+        } elseif (preg_match('/(obrigad|valeu|vlw|obg|thanks|thank you|gracias|top|perfeito|excelente|muito bom|ajudou)/i', $perguntaLimpa)) {
+            $intencao = 'agradecimento';
+        } elseif (preg_match('/(tchau|até mais|ate mais|tchauzinho|adeus|bye|goodbye|hasta luego|até logo|ate logo|falou)/i', $perguntaLimpa)) {
+            $intencao = 'despedida';
+        } elseif (preg_match('/(quem (é|e) (você|voce|tu)|o que (você|voce) (faz|é|e)|como funciona|qual (é|e) seu nome|quem desenvolveu|como (você|voce) ajuda|quais suas func)/i', $perguntaLimpa)) {
+            $intencao = 'identidade';
+        } elseif (preg_match('/(melhor(es)? (local|locais|lugar|lugares|atrativo|atrativos|ponto|pontos|passeio|passeios)|quais (locais|lugares|atrativos|pontos)|o que visitar|onde ir em jo(a|ã)o|recomenda(ção|cao|çoes|coes)?|sugest(ão|ao|ões|oes)|indica(ção|cao)|para o meu perfil|meu perfil)/i', $perguntaLimpa)) {
+            $intencao = 'recomendacao_perfil';
+        } elseif (preg_match('/(quando ir|melhor (época|epoca)|clima|tempo|sol|chover|chuva|estacao|estação|temperatura)/i', $perguntaLimpa)) {
+            $intencao = 'clima_epoca';
+        } elseif (preg_match('/(maré|mare|tábua|tabua|lua cheia|lua nova)/i', $perguntaLimpa)) {
+            $intencao = 'mare';
+        } elseif (preg_match('/(por do sol|pôr do sol|sunset|jacare|jacaré|bolero|jurandy|farol)/i', $perguntaLimpa)) {
+            $intencao = 'por_do_sol';
+        } elseif (preg_match('/(praia|praias|mar|orla|tambaú|tambau|cabo branco|manaíra|manaira|bessa|seixas|picãozinho|picaozinho)/i', $perguntaLimpa)) {
+            $intencao = 'praias';
+        } elseif (preg_match('/(artesanato|lembrancinha|compras|souvenir|feirinha|mercado de artesanato|map)/i', $perguntaLimpa)) {
+            $intencao = 'artesanato_compras';
+        } elseif (preg_match('/(evento|festa|show|agenda|programa|festival|quando)/i', $perguntaLimpa)) {
             $intencao = 'eventos';
         } elseif (preg_match('/(comer|restaurante|gastronomia|comida|almoco|jantar|lanche|bar|cafe|doce)/i', $perguntaLimpa)) {
             $intencao = 'gastronomia';
@@ -363,6 +390,506 @@ class AiItineraryService
         $sugestoes = [];
 
         switch ($intencao) {
+            case 'criar_plano_turismo':
+            case 'editar_plano_turismo':
+                $dias = 2;
+                if (preg_match('/(\d+)\s*dia/i', $perguntaLimpa, $m)) {
+                    $dias = max(1, min(7, (int)$m[1]));
+                }
+
+                $interessesTurista = $user ? (array)($user->interesses ?? []) : [];
+
+                $atrativosQuery = Atrativo::with('categoria')->visivelPortal()->get();
+                if ($atrativosQuery->isEmpty()) {
+                    $atrativosQuery = Atrativo::with('categoria')->where('ativo', true)->get();
+                }
+
+                $eventosQuery = Evento::visivelPortal()->where(function($q) {
+                    $q->whereNull('data_fim')->orWhere('data_fim', '>=', now());
+                })->get();
+
+                if (!empty($interessesTurista)) {
+                    $atrativosQuery = $atrativosQuery->sortByDesc(function($at) use ($interessesTurista) {
+                        $score = 0;
+                        $cat = mb_strtolower($at->categoria?->nome ?? '');
+                        $desc = mb_strtolower($at->descricao ?? '');
+                        foreach ($interessesTurista as $int) {
+                            if (str_contains($cat, mb_strtolower($int)) || str_contains($desc, mb_strtolower($int))) {
+                                $score += 10;
+                            }
+                        }
+                        if ($at->destaque) $score += 5;
+                        return $score;
+                    })->values();
+                }
+
+                $itensPlano = [];
+                $indexAtrativo = 0;
+                $totalAtrativos = max(1, $atrativosQuery->count());
+
+                for ($d = 1; $d <= $dias; $d++) {
+                    // Manhã
+                    $atManha = $atrativosQuery[$indexAtrativo % $totalAtrativos];
+                    $indexAtrativo++;
+                    $itensPlano[] = [
+                        'dia' => $d,
+                        'ordem' => 1,
+                        'periodo' => 'Manhã (08:30)',
+                        'tipo' => 'atrativo',
+                        'item_id' => $atManha->id,
+                        'nome' => $atManha->nome,
+                        'categoria' => $atManha->categoria?->nome ?? 'Atrativo',
+                        'notas' => 'Exploração matutina e registro fotográfico.'
+                    ];
+
+                    // Tarde
+                    $atTarde = $atrativosQuery[$indexAtrativo % $totalAtrativos];
+                    $indexAtrativo++;
+                    $itensPlano[] = [
+                        'dia' => $d,
+                        'ordem' => 2,
+                        'periodo' => 'Tarde (14:30)',
+                        'tipo' => 'atrativo',
+                        'item_id' => $atTarde->id,
+                        'nome' => $atTarde->nome,
+                        'categoria' => $atTarde->categoria?->nome ?? 'Atrativo',
+                        'notas' => 'Passeio cultural / contemplação.'
+                    ];
+
+                    // Noite
+                    if (!$eventosQuery->isEmpty() && ($d % 2 == 1)) {
+                        $ev = $eventosQuery[($d - 1) % $eventosQuery->count()];
+                        $itensPlano[] = [
+                            'dia' => $d,
+                            'ordem' => 3,
+                            'periodo' => 'Noite (19:30)',
+                            'tipo' => 'evento',
+                            'item_id' => $ev->id,
+                            'nome' => $ev->titulo,
+                            'categoria' => 'Evento Cultural / Festividade',
+                            'notas' => "Local: " . ($ev->local ?? 'João Pessoa')
+                        ];
+                    } else {
+                        $atNoite = $atrativosQuery[$indexAtrativo % $totalAtrativos];
+                        $indexAtrativo++;
+                        $itensPlano[] = [
+                            'dia' => $d,
+                            'ordem' => 3,
+                            'periodo' => 'Noite (20:00)',
+                            'tipo' => 'atrativo',
+                            'item_id' => $atNoite->id,
+                            'nome' => $atNoite->nome,
+                            'categoria' => $atNoite->categoria?->nome ?? 'Gastronomia / Lazer',
+                            'notas' => 'Jantar regional e entretenimento.'
+                        ];
+                    }
+                }
+
+                $isEdicao = ($intencao === 'editar_plano_turismo');
+                $tituloPlano = ($isEdicao ? "Plano Atualizado" : "Plano Personalizado") . " - {$dias} " . ($dias > 1 ? "Dias" : "Dia") . " em João Pessoa";
+                $descPlano = "Roteiro turístico sob medida gerado pelo Guia PITE IA com atrações oficiais e eventos recomendados.";
+
+                $dadosExtras = [
+                    'tipo_acao' => 'plano_turismo_gerado',
+                    'plano' => [
+                        'titulo' => $tituloPlano,
+                        'descricao' => $descPlano,
+                        'dias' => $dias,
+                        'itens' => $itensPlano,
+                        'preferencias' => [
+                            'perfil' => $user->perfil ?? 'turista',
+                            'dias' => $dias,
+                        ]
+                    ]
+                ];
+
+                $headerTxt = $isEdicao ? "✨ **Plano Atualizado!**\n\n" : "🗺️ **" . $tituloPlano . "**\n\n";
+                $introTxt = $isEdicao ? "Ajustei o seu roteiro de **{$dias} dia(s)** conforme solicitado! Confira as atrações organizadas:\n\n" : "Elaborei um roteiro especial de **{$dias} dia(s)** em João Pessoa para o seu perfil! Confira a programação:\n\n";
+
+                $respostaText = $headerTxt . $introTxt;
+
+                for ($d = 1; $d <= $dias; $d++) {
+                    $respostaText .= "📅 **Dia {$d}:**\n";
+                    $itensDoDia = array_filter($itensPlano, fn($i) => $i['dia'] == $d);
+                    foreach ($itensDoDia as $it) {
+                        $respostaText .= "• **{$it['periodo']}**: {$it['nome']} _({$it['categoria']})_\n";
+                    }
+                    $respostaText .= "\n";
+                }
+
+                $respostaText .= "💡 *Você pode me pedir para ajustar qualquer dia (ex: 'mude o dia 2 para praias') ou clicar em **Salvar Plano** para armazená-lo na sua conta!*";
+
+                $resposta = $respostaText;
+                $sugestoes = [
+                    "Salvar este plano",
+                    "Mudar o dia 1 para praias",
+                    "Mudar o dia 2 para cultura",
+                    "Gerar plano de 3 dias"
+                ];
+                break;
+
+            case 'outra_cidade':
+                $resposta = match ($idioma) {
+                    'en' => "I am **Guia PITE IA**, a virtual guide focused exclusively on tourism in **João Pessoa**. Therefore, I cannot provide detailed information about attractions in other cities. However, I can help you discover the best beaches, historic landmarks, events, and local gastronomy right here in João Pessoa! ☀️🏖️",
+                    'es' => "Soy el **Guía PITE IA**, un asistente virtual centrado exclusivamente en el turismo de **João Pessoa**. Por lo tanto, no puedo brindar información sobre atracciones o sitios de otras ciudades. ¡Pero puedo ayudarte a descubrir las mejores playas, monumentos históricos, eventos y gastronomía aquí en João Pessoa! ☀️🏖️",
+                    default => "Sou o **Guia PITE IA**, um assistente focado exclusivamente no turismo de **João Pessoa**. Por isso, não consigo informar sobre atrações ou locais turísticos de outras cidades. Mas posso te ajudar a descobrir as melhores praias, monumentos históricos, eventos e gastronomia aqui em João Pessoa! ☀️🏖️"
+                };
+
+                $destaques = Atrativo::where('destaque', true)->visivelPortal()->take(2)->get();
+                if ($destaques->isEmpty()) {
+                    $destaques = Atrativo::visivelPortal()->take(2)->get();
+                }
+                foreach ($destaques as $at) {
+                    $cards[] = [
+                        'tipo' => 'atrativo',
+                        'titulo' => $at->nome,
+                        'subtitulo' => '📍 João Pessoa · ' . ($at->categoria?->nome ?? 'Atrativo Turístico'),
+                        'url' => route('portal.atrativos.show', $at->slug)
+                    ];
+                }
+                $sugestoes = match ($idioma) {
+                    'en' => ["Beaches in João Pessoa", "Historic Center", "Jacaré Sunset", "Generate AI Itinerary"],
+                    'es' => ["Playas de João Pessoa", "Centro Histórico", "Puesta de sol en Jacaré", "Itinerario a medida"],
+                    default => ["Praias de João Pessoa", "Centro Histórico de JP", "Pôr do Sol no Jacaré", "Roteiro Personalizado"]
+                };
+                break;
+
+            case 'saudacao':
+                $resposta = match ($idioma) {
+                    'en' => "Hello! Welcome to João Pessoa! ☀️🏖️ I am **Guia PITE IA**, your official virtual tourism guide. How can I help you today? You can ask me about tourist spots, beaches, local cuisine, events, or request a custom itinerary!",
+                    'es' => "¡Hola! ¡Bienvenido(a) a João Pessoa! ☀️🏖️ Soy el **Guía PITE IA**, tu asistente virtual oficial de turismo. ¿Cómo puedo ayudarte hoy? ¡Puedes preguntarme sobre atractivos, playas, gastronomía, eventos o itinerarios!",
+                    default => "Olá! Seja muito bem-vindo(a) a João Pessoa! ☀️🏖️ Sou o **Guia PITE IA**, seu assistente virtual oficial de turismo. Como posso te ajudar hoje? Você pode me perguntar sobre pontos turísticos, praias, gastronomia regional, eventos ou pedir um roteiro personalizado!"
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["What to do today?", "Best beaches", "Local gastronomy", "1-day itinerary"],
+                    'es' => ["¿Qué hacer hoy?", "Mejores playas", "Comida típica", "Itinerario de 1 día"],
+                    default => ["O que fazer hoje?", "Praias mais bonitas", "Onde comer comida típica", "Roteiro de 1 dia"]
+                };
+                break;
+
+            case 'agradecimento':
+                $resposta = match ($idioma) {
+                    'en' => "You're very welcome! 😊 Glad I could help. Enjoy every moment in João Pessoa! If you need any more tips or recommendations, just ask. Have a great time! 🌴✨",
+                    'es' => "¡De nada! 😊 Me alegra mucho poder ayudarte. ¡Disfruta al máximo cada momento en João Pessoa! Si necesitas más consejos o información, aquí estaré. ¡Que tengas un gran paseo! 🌴✨",
+                    default => "Por nada! 😊 Fico muito feliz em ajudar. Aproveite ao máximo cada momento em João Pessoa! Se precisar de mais alguma informação ou nova recomendação, é só me chamar. Tenha um ótimo passeio! 🌴✨"
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Ready itineraries", "City beaches", "Events this week"],
+                    'es' => ["Itinerarios listos", "Playas de la ciudad", "Eventos de la semana"],
+                    default => ["Ver roteiros prontos", "Praias da cidade", "Eventos desta semana"]
+                };
+                break;
+
+            case 'despedida':
+                $resposta = match ($idioma) {
+                    'en' => "Goodbye! 👋 It was a pleasure helping you. Have a wonderful stay and great trips in João Pessoa! Whenever you need official tips, Guia PITE IA is here. Safe travels! ☀️🌊",
+                    'es' => "¡Hasta luego! 👋 Fue un placer ayudarte. ¡Que tengas una excelente estancia y grandes paseos en João Pessoa! Siempre que necesites consejos oficiales, el Guía PITE IA estará aquí. ¡Buen viaje! ☀️🌊",
+                    default => "Até mais! 👋 Foi um prazer te ajudar. Tenha uma excelente estadia e ótimos passeios em João Pessoa! Sempre que precisar de dicas oficiais, o Guia PITE IA estará aqui. Boa viagem! ☀️🌊"
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Top attractions", "Local food"],
+                    'es' => ["Atractivos de JP", "Comida típica"],
+                    default => ["Voltar ao início", "Praias de João Pessoa"]
+                };
+                break;
+
+            case 'identidade':
+                $resposta = match ($idioma) {
+                    'en' => "I am **Guia PITE IA**, the official smart virtual tourism guide of João Pessoa! 🤖🌴\n\nI can help you with:\n• Top attractions & beaches in João Pessoa;\n• Custom itineraries tailored to your time & profile;\n• Verified local gastronomy & upcoming events;\n• Accessibility (PNE) & emergency contacts.",
+                    'es' => "¡Soy el **Guía PITE IA**, el asistente virtual inteligente oficial de turismo de João Pessoa! 🤖🌴\n\nPuedo ayudarte con:\n• Principales atractivos y playas en João Pessoa;\n• Itinerarios personalizados según tu tiempo y perfil;\n• Gastronomía local verificada y eventos oficiales;\n• Accesibilidad (PNE) y contactos de emergencia.",
+                    default => "Eu sou o **Guia PITE IA**, o assistente virtual inteligente e oficial do turismo de João Pessoa! 🤖🌴\n\nEstou conectado à base oficial de dados do município e posso te ajudar com:\n• **Atrativos & Praias**: informações atualizadas e passeios em João Pessoa;\n• **Roteiros Personalizados**: criação de itinerários sob medida;\n• **Gastronomia & Eventos**: onde comer e o que fazer na cidade;\n• **Acessibilidade & Segurança**: locais adaptados PNE e contatos úteis."
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Generate AI Itinerary", "Search Tourist Spots", "Events in João Pessoa"],
+                    'es' => ["Generar Itinerario IA", "Buscar Atractivos", "Eventos en João Pessoa"],
+                    default => ["Gerar Roteiro Personalizado", "Buscar Pontos Turísticos", "Eventos em João Pessoa"]
+                };
+                break;
+
+            case 'recomendacao_perfil':
+                $atrativosQuery = Atrativo::with('categoria')->visivelPortal()->get();
+                if ($atrativosQuery->isEmpty()) {
+                    $atrativosQuery = Atrativo::with('categoria')->where('ativo', true)->get();
+                }
+
+                $eventosQuery = Evento::visivelPortal()
+                    ->where(function($q) {
+                        $q->whereNull('data_fim')->orWhere('data_fim', '>=', now());
+                    })->get();
+
+                $interessesTurista = [];
+                $necessidadesEspeciais = [];
+                $visitadosIds = [];
+
+                if ($user) {
+                    $interessesTurista = (array) ($user->interesses ?? []);
+                    $necessidadesEspeciais = (array) ($user->necessidades_especiais ?? []);
+                    if (method_exists($user, 'historicoVisitas')) {
+                        $visitadosIds = $user->historicoVisitas()->pluck('atrativo_id')->toArray();
+                    }
+                }
+
+                if (!empty($interessesTurista) || !empty($necessidadesEspeciais)) {
+                    $pontuadosAtrativos = $atrativosQuery->map(function ($at) use ($interessesTurista, $necessidadesEspeciais, $visitadosIds, $user) {
+                        $score = 0;
+                        $catSlug = mb_strtolower($at->categoria?->slug ?? '');
+                        $catNome = mb_strtolower($at->categoria?->nome ?? '');
+                        $desc = mb_strtolower($at->descricao ?? '');
+                        $nome = mb_strtolower($at->nome ?? '');
+
+                        foreach ($interessesTurista as $int) {
+                            $intClean = mb_strtolower($int);
+                            if (str_contains($catSlug, $intClean) || str_contains($catNome, $intClean) || str_contains($desc, $intClean) || str_contains($nome, $intClean)) {
+                                $score += 25;
+                            }
+                        }
+
+                        if (in_array('cadeirante', $necessidadesEspeciais) || in_array('pne', $necessidadesEspeciais)) {
+                            $niveis = (array) ($at->niveis_acessibilidade ?? []);
+                            if (!empty($niveis['cadeirante']) || !empty($niveis['rampa'])) {
+                                $score += 15;
+                            }
+                        }
+
+                        if ($user && $user->possui_filhos) {
+                            if (str_contains($desc, 'família') || str_contains($desc, 'criança') || str_contains($desc, 'infantil') || str_contains($catSlug, 'ecologico') || str_contains($catSlug, 'praia')) {
+                                $score += 10;
+                            }
+                        }
+
+                        if ($at->destaque) {
+                            $score += 10;
+                        }
+
+                        if (in_array($at->id, $visitadosIds)) {
+                            $score -= 5;
+                        }
+
+                        return [
+                            'item' => $at,
+                            'tipo' => 'atrativo',
+                            'score' => $score
+                        ];
+                    });
+
+                    $pontuadosEventos = $eventosQuery->map(function ($ev) use ($interessesTurista, $user) {
+                        $score = 0;
+                        $desc = mb_strtolower($ev->descricao ?? '');
+                        $titulo = mb_strtolower($ev->titulo ?? '');
+                        $local = mb_strtolower($ev->local ?? '');
+
+                        foreach ($interessesTurista as $int) {
+                            $intClean = mb_strtolower($int);
+                            if (str_contains($titulo, $intClean) || str_contains($desc, $intClean) || str_contains($local, $intClean)) {
+                                $score += 25;
+                            }
+                        }
+
+                        if ($user && $user->possui_filhos) {
+                            if (str_contains($desc, 'família') || str_contains($desc, 'criança') || str_contains($desc, 'infantil')) {
+                                $score += 10;
+                            }
+                        }
+
+                        // Bonus para eventos próximos ou hoje
+                        $score += 5;
+
+                        return [
+                            'item' => $ev,
+                            'tipo' => 'evento',
+                            'score' => $score
+                        ];
+                    });
+
+                    $todosPontuados = $pontuadosAtrativos->concat($pontuadosEventos)
+                        ->sortByDesc('score')
+                        ->values();
+
+                    $topItens = $todosPontuados->take(4);
+
+                    $interessesFormatados = implode(', ', array_map(fn($i) => mb_convert_case($i, MB_CASE_TITLE, "UTF-8"), $interessesTurista));
+
+                    $top1 = $topItens->first();
+                    $top1Nome = $top1['tipo'] === 'atrativo' ? $top1['item']->nome : $top1['item']->titulo;
+
+                    $introPt = "Com base no seu perfil de turista" . ($interessesFormatados ? " e nos seus interesses em **{$interessesFormatados}**" : "") . ", analisei o catálogo e encontrei a melhor combinação para você! 🎯✨\n\n";
+
+                    foreach ($topItens as $idx => $entry) {
+                        $item = $entry['item'];
+                        $isTop1 = ($idx === 0);
+                        if ($entry['tipo'] === 'atrativo') {
+                            $catLabel = $item->categoria?->nome ?? 'Atrativo Turístico';
+                            $resumo = Str::limit(strip_tags($item->descricao), 100);
+                            $badge = $isTop1 ? "⭐ **MELHOR OPÇÃO PARA VOCÊ (#1)**: " : "• ";
+                            $introPt .= "{$badge}**{$item->nome}** ({$catLabel}). {$resumo}\n";
+                        } else {
+                            $resumo = Str::limit(strip_tags($item->descricao), 100);
+                            $dataFmt = $item->data_inicio ? $item->data_inicio->format('d/m') : 'Em breve';
+                            $badge = $isTop1 ? "⭐ **MELHOR OPÇÃO PARA VOCÊ (#1 - EVENTO)**: " : "• [Evento em {$dataFmt}] ";
+                            $introPt .= "{$badge}**{$item->titulo}** no {$item->local}. {$resumo}\n";
+                        }
+                    }
+
+                    $introPt .= "\nO local **{$top1Nome}** obteve o maior grau de afinidade com as suas preferências!";
+
+                    $resposta = match ($idioma) {
+                        'en' => "Based on your traveler profile" . ($interessesFormatados ? " and your interests in **{$interessesFormatados}**" : "") . ", our AI identified the best match for you:\n\n" .
+                                $topItens->map(function($e, $i) {
+                                    $isTop1 = ($i === 0);
+                                    $n = $e['tipo'] === 'atrativo' ? $e['item']->nome : $e['item']->titulo;
+                                    $d = Str::limit(strip_tags($e['item']->descricao), 100);
+                                    return ($isTop1 ? "⭐ **TOP CHOICE (#1)**: " : "• ") . "**{$n}**. {$d}";
+                                })->implode("\n"),
+                        'es' => "Según tu perfil de turista" . ($interessesFormatados ? " y tus intereses en **{$interessesFormatados}**" : "") . ", la IA identificó la mejor opción para ti:\n\n" .
+                                $topItens->map(function($e, $i) {
+                                    $isTop1 = ($i === 0);
+                                    $n = $e['tipo'] === 'atrativo' ? $e['item']->nome : $e['item']->titulo;
+                                    $d = Str::limit(strip_tags($e['item']->descricao), 100);
+                                    return ($isTop1 ? "⭐ **OPCIÓN PRINCIPAL (#1)**: " : "• ") . "**{$n}**. {$d}";
+                                })->implode("\n"),
+                        default => $introPt
+                    };
+
+                    foreach ($topItens as $entry) {
+                        $item = $entry['item'];
+                        if ($entry['tipo'] === 'atrativo') {
+                            $cards[] = [
+                                'tipo' => 'atrativo',
+                                'titulo' => $item->nome,
+                                'subtitulo' => '🎯 Recomendado para seu perfil · ' . ($item->categoria?->nome ?? 'Atrativo Turístico'),
+                                'url' => route('portal.atrativos.show', $item->slug)
+                            ];
+                        } else {
+                            $cards[] = [
+                                'tipo' => 'evento',
+                                'titulo' => '🎉 ' . $item->titulo,
+                                'subtitulo' => 'Evento em João Pessoa · ' . ($item->local ?? 'Local a definir'),
+                                'url' => route('portal.eventos.show', $item->slug)
+                            ];
+                        }
+                    }
+
+                    $sugestoes = match ($idioma) {
+                        'en' => ["Generate Custom AI Itinerary", "Edit my interests", "Beaches in João Pessoa"],
+                        'es' => ["Generar Itinerario Personalizado", "Editar mis intereses", "Playas de João Pessoa"],
+                        default => ["Gerar Roteiro Personalizado", "Editar meus interesses no perfil", "Ver praias de João Pessoa"]
+                    };
+
+                } else {
+                    $destaques = $atrativosQuery->where('destaque', true)->take(4);
+                    if ($destaques->isEmpty()) {
+                        $destaques = $atrativosQuery->take(4);
+                    }
+
+                    $resposta = match ($idioma) {
+                        'en' => "Here are top recommended places to visit in **João Pessoa**! ☀️🏖️\n\n" .
+                                $destaques->map(fn($at) => "• **{$at->nome}**: " . ($at->categoria?->nome ?? 'Attraction') . ". " . Str::limit(strip_tags($at->descricao), 110))->implode("\n") .
+                                "\n\n💡 *Tip: Log in and configure your traveler interests in your profile to get 100% personalized AI suggestions!*",
+                        'es' => "¡Aquí tienes excelentes lugares recomendados para visitar en **João Pessoa**! ☀️🏖️\n\n" .
+                                $destaques->map(fn($at) => "• **{$at->nome}**: " . ($at->categoria?->nome ?? 'Atracción') . ". " . Str::limit(strip_tags($at->descricao), 110))->implode("\n") .
+                                "\n\n💡 *Consejo: ¡Inicia sesión y configura tus intereses en tu perfil de turista para recibir recomendaciones personalizadas por la IA!*",
+                        default => "Confira os melhores e mais populares locais para visitar em **João Pessoa**! ☀️🏖️\n\n" .
+                                $destaques->map(fn($at) => "• **{$at->nome}**: " . ($at->categoria?->nome ?? 'Atrativo Turístico') . ". " . Str::limit(strip_tags($at->descricao), 110))->implode("\n") .
+                                "\n\n💡 *Dica PITE: Faça login e cadastre seus interesses no seu perfil de turista para receber recomendações de IA 100% personalizadas sob medida para você! 🎯*"
+                    };
+
+                    foreach ($destaques as $at) {
+                        $cards[] = [
+                            'tipo' => 'atrativo',
+                            'titulo' => $at->nome,
+                            'subtitulo' => '📍 João Pessoa · ' . ($at->categoria?->nome ?? 'Destaque Turístico'),
+                            'url' => route('portal.atrativos.show', $at->slug)
+                        ];
+                    }
+
+                    $sugestoes = match ($idioma) {
+                        'en' => ["Custom AI Itinerary", "Beach guide", "Historic center"],
+                        'es' => ["Itinerario con IA", "Guía de playas", "Centro histórico"],
+                        default => ["Gerar Roteiro Personalizado", "Guia das Praias de JP", "Centro Histórico"]
+                    };
+                }
+                break;
+
+            case 'praias':
+                $resposta = match ($idioma) {
+                    'en' => "João Pessoa has one of the most beautiful urban coastlines in Brazil! 🏖️✨\n\nMain beaches in the city:\n• **Tambaú**: Vibrant atmosphere, craft fair, and catamaran departures to Picãozinho natural pools.\n• **Cabo Branco**: Tree-lined promenade, ideal for walks, close to Cabo Branco Lighthouse.\n• **Bessa**: Calm, crystal-clear waters, great for stand-up paddle and families.\n• **Seixas**: The easternmost point of the Americas, with amazing natural pools during low tide.",
+                    'es' => "¡João Pessoa tiene una de las costas urbanas más bellas de Brasil! 🏖️✨\n\nPrincipales playas de la ciudad:\n• **Tambaú**: Corazón turístico, feria de artesanía y salidas hacia las piscinas naturales de Picãozinho.\n• **Cabo Branco**: Paseo arbolado ideal para caminatas, cerca del Faro de Cabo Branco.\n• **Bessa**: Aguas tranquilas, perfectas para kayak y familias.\n• **Seixas**: ¡El punto más oriental de las Américas!",
+                    default => "João Pessoa possui uma das orlas urbanas mais bonitas e preservadas do Brasil! 🏖️✨\n\nConfira as principais praias da cidade:\n• **Tambaú**: Coração turístico, com mar calmo, feirinha de artesanato e saída de catamarãs para as piscinas naturais de Picãozinho.\n• **Cabo Branco**: Orla arborizada, calçadão ideal para caminhadas e proximidade com o Farol do Cabo Branco.\n• **Bessa (Caribessa)**: Águas calmas e cristalinas, perfeitas para caiaque, stand-up paddle e famílias.\n• **Seixas**: O ponto mais oriental das Américas, com piscinas naturais incríveis na maré baixa."
+                };
+                $praiaAtrativos = Atrativo::where(function($q) {
+                        $q->where('nome', 'like', '%praia%')
+                          ->orWhere('nome', 'like', '%tamba%')
+                          ->orWhere('nome', 'like', '%cabo branco%')
+                          ->orWhere('nome', 'like', '%seixas%');
+                    })
+                    ->visivelPortal()->take(3)->get();
+                foreach ($praiaAtrativos as $at) {
+                    $cards[] = [
+                        'tipo' => 'atrativo',
+                        'titulo' => $at->nome,
+                        'subtitulo' => '🏖️ Orla de João Pessoa',
+                        'url' => route('portal.atrativos.show', $at->slug)
+                    ];
+                }
+                $sugestoes = match ($idioma) {
+                    'en' => ["Seixas Natural Pools", "Jacaré Sunset", "Beach Itinerary"],
+                    'es' => ["Piscinas Naturales de Seixas", "Puesta de sol en Jacaré", "Ruta de Playas"],
+                    default => ["Piscinas Naturais do Seixas", "Pôr do Sol no Jacaré", "Roteiro das Praias"]
+                };
+                break;
+
+            case 'por_do_sol':
+                $resposta = match ($idioma) {
+                    'en' => "Sunsets in João Pessoa and region are unforgettable! 🌅🎷\n\nTop spots to watch:\n• **Jacaré Beach (Cabedelo/JP)**: Famous sunset accompanied live by Jurandy do Sax playing Ravel's Bolero.\n• **Cabo Branco Lighthouse & Station**: Panoramic ocean view at the Easternmost Point of the Americas.\n• **Tambaú & Cabo Branco Waterfront**: Great for an evening walk along the beach.",
+                    'es' => "¡Los atardeceres en João Pessoa son inolvidables! 🌅🎷\n\nMejores lugares:\n• **Playa de Jacaré**: Puesta de sol con el Bolero de Ravel interpretado en vivo por Jurandy do Sax.\n• **Faro y Estación Cabo Branco**: Vista panorámica del océano en el punto más oriental de las Américas.\n• **Paseo de Tambaú y Cabo Branco**: Excelente para caminar al atardecer.",
+                    default => "O pôr do sol em João Pessoa e região metropolitana é um espetáculo inesquecível! 🌅🎷\n\nOs melhores locais para contemplar:\n• **Praia do Jacaré (Cabedelo/João Pessoa)**: O famoso pôr do sol embalado ao vivo pelo Bolero de Ravel executado por Jurandy do Sax.\n• **Farol do Cabo Branco & Estação Cabo Branco**: Vista panorâmica do oceano no Ponto Mais Oriental das Américas.\n• **Orla de Tambaú e Cabo Branco**: Excelente para ver as cores do entardecer durante uma caminhada pelo calçadão."
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Farol do Cabo Branco", "Restaurants near the beach", "Evening Itinerary"],
+                    'es' => ["Faro de Cabo Branco", "Restaurantes cerca del mar", "Itinerario nocturno"],
+                    default => ["Farol do Cabo Branco", "Restaurantes na Orla", "Roteiro Noturno"]
+                };
+                break;
+
+            case 'clima_epoca':
+                $resposta = match ($idioma) {
+                    'en' => "João Pessoa is sunny almost all year round! ☀️🌡️\n\n• **September to March (Dry & High Season)**: Clear days, bright sun, and crystal-clear waters for natural pool visits.\n• **April to August (Rainy Season)**: Passing showers and mild tropical weather. Great for visiting the Historic Center, museums, and regional gastronomy.\n• **Tide Tip**: For natural pools, check low tides below 0.4m during Full or New Moon!",
+                    'es' => "¡João Pessoa es soleada casi todo el año! ☀️🌡️\n\n• **Septiembre a Marzo (Seco y Temporada Alta)**: Días despejados, sol radiante y aguas cristalinas.\n• **Abril a Agosto (Lluvioso)**: Lluvias pasajeras y clima fresco. Ideal para visitar el Centro Histórico y museos.\n• **Consejo de Marea**: Para piscinas naturales, consulta mareas bajas de menos de 0.4m.",
+                    default => "João Pessoa é uma cidade ensolarada praticamente o ano todo! ☀️🌡️\n\n• **Setembro a Março (Alta Temporada & Seca)**: Meses com dias mais limpos, sol radiante e águas cristalinas para passeios de maré baixa.\n• **Abril a Agosto (Período Chuvoso)**: Chuvas passageiras e clima tropical ameno. Ótimo momento para conhecer o Centro Histórico, museus e desfrutar da rica gastronomia regional.\n• **Dica de Maré**: Para piscinas naturais, planeje sua visita nas luas cheia ou nova, com maré abaixo de 0.4m!"
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Tide table info", "Indoor activities", "Historic Center"],
+                    'es' => ["Tabla de mareas", "Qué hacer si llueve", "Centro Histórico"],
+                    default => ["Informação de marés", "O que fazer com chuva?", "Centro Histórico"]
+                };
+                break;
+
+            case 'mare':
+                $resposta = match ($idioma) {
+                    'en' => "To visit Picãozinho and Seixas natural pools, the secret is the tide table! 🌊⚓\n\n• **Ideal Tide**: Choose days with tide between 0.0m and 0.4m.\n• **Moon Phases**: Lowest tides occur during New Moon and Full Moon.\n• **Schedule**: Catamaran tours leave about 1h30 before the lowest tide point.",
+                    'es' => "Para visitar las piscinas naturales de Picãozinho y Seixas, ¡el secreto es la tabla de mareas! 🌊⚓\n\n• **Marea Ideal**: Elige días con marea entre 0.0m y 0.4m.\n• **Fases de la Luna**: Luna Nueva y Luna Llena.\n• **Horario**: Los catamarán salen aprox. 1h30 antes de la marea más baja.",
+                    default => "Para visitar as famosas **Piscinas Naturais de Picãozinho** e do **Seixas**, o segredo é a tábua de marés! 🌊⚓\n\n• **Maré Ideal**: Escolha dias com maré entre **0.0m e 0.4m**.\n• **Fases da Lua**: As marés mais baixas ocorrem nas fases de Lua Nova e Lua Cheia.\n• **Horário**: Os passeios de catamarã saem cerca de 1h30 antes do pico da maré baixa."
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Seixas pools", "Tambaú beach", "Catamaran tours"],
+                    'es' => ["Piscinas de Seixas", "Playa de Tambaú", "Catamarán"],
+                    default => ["Piscinas do Seixas", "Praia de Tambaú", "Passeio de Catamarã"]
+                };
+                break;
+
+            case 'artesanato_compras':
+                $resposta = match ($idioma) {
+                    'en' => "João Pessoa highly values local craftsmanship! 🛍️🎨\n\nMust-visit shopping spots:\n• **Tambaú Craft Fair**: Open daily on the waterfront with lace, embroidery, and local sweets.\n• **Paraíba Handicraft Market (MAP)**: Complete complex of regional crafts in Tambaú.\n• **Historic Center**: Studios and shops with clay, leather, and wood crafts.",
+                    'es' => "¡João Pessoa valora enormemente la artesanía local! 🛍️🎨\n\nLugares imperdibles:\n• **Feria de Artesanía de Tambaú**: Abierta a diario en la costa.\n• **Mercado de Artesanía Paraibano (MAP)**: Complejo de artesanías en Tambaú.\n• **Centro Histórico**: Tiendas de artesanía en madera y cerámica.",
+                    default => "João Pessoa valoriza muito o artesanato e os produtores locais! 🛍️🎨\n\nLocais imperdíveis para compras e lembrancinhas:\n• **Feirinha de Artesanato de Tambaú**: Localizada na Orla de Tambaú, funciona diariamente com rendas, bordados e doces típicos.\n• **Mercado de Artesanato Paraibano (MAP)**: Complexo completo de artesanato regional em Tambaú.\n• **Centro Histórico**: Ateliês e lojas com peças exclusivas em argila, couro e madeira."
+                };
+                $sugestoes = match ($idioma) {
+                    'en' => ["Tambaú Fair", "Historic Center", "Regional sweets"],
+                    'es' => ["Feria de Tambaú", "Centro Histórico", "Dulces típicos"],
+                    default => ["Feirinha de Tambaú", "Centro Histórico", "Doces regionais"]
+                };
+                break;
+
             case 'eventos':
                 $eventos = Evento::where('ativo', true)->where('status_aprovacao', 'aprovado')->latest('data_inicio')->take(3)->get();
                 if ($eventos->isNotEmpty()) {
@@ -380,9 +907,9 @@ class AiItineraryService
                     ])->toArray();
                 } else {
                     $resposta = match ($idioma) {
-                        'en' => "There are no major events registered for this week, but our historical and nature attractions are open!",
-                        'es' => "No hay eventos registrados para esta semana, ¡pero nuestros atractivos históricos y naturales están abiertos!",
-                        default => "Não temos eventos cadastrados para esta semana, mas nossos atrativos históricos e ecológicos estão funcionando normalmente!"
+                        'en' => "There are no major events registered for this week in João Pessoa, but our beaches, historic landmarks, and parks are open!",
+                        'es' => "No hay eventos registrados para esta semana en João Pessoa, ¡pero nuestras playas y sitios históricos están abiertos!",
+                        default => "Não temos eventos cadastrados para esta semana em João Pessoa, mas nossas praias, pontos históricos e parques estão funcionando normalmente!"
                     };
                 }
                 $sugestoes = ["Ver calendário de eventos", "Roteiros para o fim de semana", "Onde comer perto"];
@@ -391,12 +918,11 @@ class AiItineraryService
             case 'gastronomia':
                 $gastronomicos = Atrativo::whereHas('categoria', fn($q) => $q->where('slug', 'gastronomia-local'))
                     ->visivelPortal()->take(3)->get();
-                $restaurantes = Empreendedor::where('ramo_atividade', 'like', '%gastro%')->where('status_aprovacao', 'aprovado')->take(2)->get();
 
                 $resposta = match ($idioma) {
-                    'en' => "Our municipal cuisine is famous for authentic flavors and local family farming. Here are top verified places to eat:",
-                    'es' => "Nuestra gastronomía municipal es famosa por sus sabores auténticos. Aquí tienes los mejores lugares verificados para comer:",
-                    default => "Nossa culinária típica é um dos maiores orgulhos do município, com produtos da agricultura familiar e selo de qualidade. Confira estas indicações oficiais:"
+                    'en' => "Our municipal cuisine is famous for authentic flavors and local family farming. Here are top verified places to eat in João Pessoa:",
+                    'es' => "Nuestra gastronomía municipal en João Pessoa es famosa por sus sabores auténticos. Aquí tienes los mejores lugares verificados para comer:",
+                    default => "Nossa culinária típica é um dos maiores orgulhos de João Pessoa! Confira estas indicações oficiais de gastronomia local:"
                 };
 
                 foreach ($gastronomicos as $at) {
@@ -407,23 +933,23 @@ class AiItineraryService
                         'url' => route('portal.atrativos.show', $at->slug)
                     ];
                 }
-                $sugestoes = ["Mercado Público Municipal", "Roteiro gastronômico completo", "Cafés coloniais"];
+                $sugestoes = ["Mercado Público Municipal", "Roteiro gastronômico completo", "Restaurantes na orla"];
                 break;
 
             case 'acessibilidade':
                 $acessiveis = Atrativo::whereJsonContains('niveis_acessibilidade->cadeirante', true)
                     ->visivelPortal()->take(3)->get();
                 $resposta = match ($idioma) {
-                    'en' => "System-PITE ensures universal accessibility. All attractions listed below feature ramps, accessible restrooms, tactile paving, and audio guides:",
-                    'es' => "System-PITE garantiza la accesibilidad universal. Todos los atractivos a continuación cuentan con rampas, baños adaptados y audioguía:",
-                    default => "O município tem compromisso total com a acessibilidade universal (WCAG e normas PNE). Os seguintes pontos contam com rampas, banheiros adaptados, piso tátil e áudio-guia:"
+                    'en' => "System-PITE ensures universal accessibility in João Pessoa. All attractions listed below feature ramps, accessible restrooms, tactile paving, and audio guides:",
+                    'es' => "System-PITE garantiza la accesibilidad universal en João Pessoa. Todos los atractivos a continuación cuentan con rampas, baños adaptados y audioguía:",
+                    default => "João Pessoa tem compromisso total com a acessibilidade universal (WCAG e normas PNE). Os seguintes pontos contam com rampas, banheiros adaptados, piso tátil e áudio-guia:"
                 };
 
                 foreach ($acessiveis as $at) {
                     $cards[] = [
                         'tipo' => 'atrativo',
                         'titulo' => $at->nome,
-                        'subtitulo' => '♿ 100% Adaptado PNE · ' . ($at->endereco ?? 'Centro'),
+                        'subtitulo' => '♿ 100% Adaptado PNE · ' . ($at->endereco ?? 'João Pessoa'),
                         'url' => route('portal.atrativos.show', $at->slug)
                     ];
                 }
@@ -434,9 +960,9 @@ class AiItineraryService
                 $natureza = Atrativo::whereHas('categoria', fn($q) => $q->where('slug', 'turismo-ecologico-e-de-aventura'))
                     ->visivelPortal()->take(3)->get();
                 $resposta = match ($idioma) {
-                    'en' => "For nature and adventure lovers, we have pristine waterfalls, scenic trails, and panoramic viewpoints in our environmental reserve:",
-                    'es' => "Para los amantes de la naturaleza, contamos con cascadas cristalinas, senderos ecológicos y miradores panorámicos:",
-                    default => "Para quem busca ecoturismo e ar puro, o município conta com cachoeiras cristalinas, trilhas na Mata Atlântica e mirantes com vistas espetaculares:"
+                    'en' => "For nature and adventure lovers in João Pessoa, we have scenic parks, trails, and coastal viewpoints:",
+                    'es' => "Para los amantes de la naturaleza en João Pessoa, contamos con parques, senderos ecológicos y miradores marítimos:",
+                    default => "Para quem busca ecoturismo e ar puro em João Pessoa, o município conta com parques urbanos, trilhas na Mata Atlântica e mirantes com vistas espetaculares:"
                 };
 
                 foreach ($natureza as $at) {
@@ -447,16 +973,16 @@ class AiItineraryService
                         'url' => route('portal.atrativos.show', $at->slug)
                     ];
                 }
-                $sugestoes = ["Trilha das Cachoeiras", "Mirante do Alto da Serra", "Dicas de segurança para trilhas"];
+                $sugestoes = ["Parque da Bica", "Jardim Botânico de JP", "Farol do Cabo Branco"];
                 break;
 
             case 'historia':
                 $historicos = Atrativo::whereHas('categoria', fn($q) => $q->where('slug', 'patrimonio-historico-e-cultural'))
                     ->visivelPortal()->take(3)->get();
                 $resposta = match ($idioma) {
-                    'en' => "Our municipal historic center features preserved colonial architecture from the 18th century, heritage churches, and cultural museums:",
-                    'es' => "Nuestro centro histórico cuenta con arquitectura colonial del siglo XVIII, iglesias patrimoniales y museos culturales:",
-                    default => "Nosso Centro Histórico preserva a memória viva do século XVIII, com monumentos tombados, igrejas coloniais e casarios restaurados:"
+                    'en' => "Our Historic Center in João Pessoa features preserved colonial architecture, heritage churches, and cultural museums:",
+                    'es' => "Nuestro Centro Histórico en João Pessoa cuenta con arquitectura colonial, iglesias patrimoniales y museos culturales:",
+                    default => "Nosso Centro Histórico em João Pessoa preserva a memória viva do Brasil colonial, com monumentos tombados, igrejas barocas e casarios restaurados:"
                 };
 
                 foreach ($historicos as $at) {
@@ -467,24 +993,24 @@ class AiItineraryService
                         'url' => route('portal.atrativos.show', $at->slug)
                     ];
                 }
-                $sugestoes = ["Roteiro histórico a pé", "Visita à Igreja Matriz", "Feira de artesanato"];
+                $sugestoes = ["Centro Cultural São Francisco", "Praça Anthenor Navarro", "Roteiro histórico a pé"];
                 break;
 
             case 'emergencia':
                 $resposta = match ($idioma) {
-                    'en' => "🚨 Official Municipal Emergency Contacts:\n• Police (Polícia Militar): 190\n• Ambulance (SAMU): 192\n• Fire Department (Bombeiros): 193\n• Civil Defense (Defesa Civil): 199\n• Tourism Office (CAT): (83) 3333-0000",
-                    'es' => "🚨 Contactos Oficiales de Emergencia:\n• Policía (Polícia Militar): 190\n• Ambulancia (SAMU): 192\n• Bomberos (Bombeiros): 193\n• Defensa Civil: 199\n• Atención al Turista: (83) 3333-0000",
-                    default => "🚨 Telefones Úteis e Contatos de Emergência Municipal:\n• Polícia Militar: 190\n• SAMU (Ambulância): 192\n• Corpo de Bombeiros: 193\n• Defesa Civil: 199\n• Guarda Municipal: 153\n• Centro de Atendimento ao Turista: (83) 3333-0000"
+                    'en' => "🚨 Official João Pessoa Emergency & Tourist Contacts:\n• Police (Polícia Militar): 190\n• Ambulance (SAMU): 192\n• Fire Department (Bombeiros): 193\n• Civil Defense (Defesa Civil): 199\n• Municipal Guard: 153\n• Tourism Support Center (CAT): (83) 3333-0000",
+                    'es' => "🚨 Contactos Oficiales de Emergencia y Turismo en João Pessoa:\n• Policía (Polícia Militar): 190\n• Ambulancia (SAMU): 192\n• Bomberos (Bombeiros): 193\n• Defensa Civil: 199\n• Guardia Municipal: 153\n• Atención al Turista (CAT): (83) 3333-0000",
+                    default => "🚨 Telefones Úteis e Contatos de Emergência em João Pessoa:\n• Polícia Militar: 190\n• SAMU (Ambulância): 192\n• Corpo de Bombeiros: 193\n• Defesa Civil: 199\n• Guarda Municipal: 153\n• Centro de Atendimento ao Turista (CAT): (83) 3333-0000"
                 };
-                $sugestoes = ["Hospitais próximos", "Farmácias de plantão", "Guia de segurança"];
+                $sugestoes = ["Hospitais próximos", "Farmácias 24h", "Dicas de segurança"];
                 break;
 
             case 'roteiro':
                 $roteiros = Roteiro::where('ativo', true)->take(3)->get();
                 $resposta = match ($idioma) {
-                    'en' => "You can choose from our curated itineraries or use our AI Generator to create a custom plan according to your time and budget:",
-                    'es' => "Puedes elegir entre nuestros itinerarios preparados o usar el Generador de IA para crear un plan a tu medida:",
-                    default => "Temos excelentes roteiros estruturados pelo município e você também pode usar nosso Gerador com IA para criar um roteiro sob medida em segundos:"
+                    'en' => "You can choose from our curated itineraries in João Pessoa or use our AI Generator to create a custom plan according to your time and budget:",
+                    'es' => "Puedes elegir entre nuestros itinerarios preparados en João Pessoa o usar el Generador de IA para crear un plan a tu medida:",
+                    default => "Temos excelentes roteiros estruturados em João Pessoa e você também pode usar nosso Gerador com IA para criar um roteiro sob medida em segundos:"
                 };
 
                 foreach ($roteiros as $rot) {
@@ -495,7 +1021,7 @@ class AiItineraryService
                         'url' => route('portal.roteiros.show', $rot->slug)
                     ];
                 }
-                $sugestoes = ["Gerar roteiro de 4 horas", "Roteiro para família com crianças", "Roteiro ecológico"];
+                $sugestoes = ["Gerar roteiro de 4 horas", "Roteiro para família com crianças", "Roteiro das praias"];
                 break;
 
             default:
@@ -507,26 +1033,30 @@ class AiItineraryService
                 if ($atrativosBusca->isNotEmpty()) {
                     $nomes = $atrativosBusca->pluck('nome')->implode(' e ');
                     $resposta = match ($idioma) {
-                        'en' => "Based on official municipal records, I found these matching destinations: {$nomes}.",
-                        'es' => "Según los registros oficiales del municipio, encontré estos destinos: {$nomes}.",
-                        default => "Com base no banco oficial do município, localizei estas excelentes opções: {$nomes}."
+                        'en' => "Based on official municipal records for João Pessoa, I found these matching destinations: {$nomes}.",
+                        'es' => "Según los registros oficiales del municipio de João Pessoa, encontré estos destinos: {$nomes}.",
+                        default => "Com base no banco oficial do município de João Pessoa, localizei estas excelentes opções: {$nomes}."
                     };
                     foreach ($atrativosBusca as $at) {
                         $cards[] = [
                             'tipo' => 'atrativo',
                             'titulo' => $at->nome,
-                            'subtitulo' => $at->categoria?->nome ?? 'Atrativo Turístico',
+                            'subtitulo' => $at->categoria?->nome ?? 'Atrativo Turístico em João Pessoa',
                             'url' => route('portal.atrativos.show', $at->slug)
                         ];
                     }
                 } else {
                     $resposta = match ($idioma) {
-                        'en' => "Hello! I am your AI Virtual Tourism Guide for System-PITE. How can I help you today? You can ask me about tourist spots, cultural events, restaurants, hotels, accessibility, or safety tips.",
-                        'es' => "¡Hola! Soy tu Asistente Virtual de Turismo del System-PITE. ¿En qué puedo ayudarte? Puedes preguntarme sobre atractivos, eventos, restaurantes, hoteles, accesibilidad o seguridad.",
-                        default => "Olá! Sou o Assistente Virtual Inteligente do System-PITE. Como posso ajudar seu passeio hoje? Você pode me perguntar sobre pontos turísticos, eventos, gastronomia típica, rotas acessíveis, pousadas ou telefones úteis."
+                        'en' => "Hello! I am **Guia PITE IA**, a virtual assistant focused exclusively on tourism in **João Pessoa**. I couldn't find a specific attraction matching your search term in our official database. How else can I assist your trip? You can ask me about beaches, historic landmarks, gastronomy, events, or custom itineraries!",
+                        'es' => "¡Hola! Soy el **Guía PITE IA**, un asistente virtual enfocado exclusivamente en el turismo de **João Pessoa**. No encontré un atractivo específico que coincida con tu búsqueda en nuestra base oficial. ¿Cómo posso ayudarte? ¡Pregúntame sobre playas, centro histórico, gastronomía, eventos o itinerarios!",
+                        default => "Olá! Sou o **Guia PITE IA**, assistente virtual oficial de turismo focado exclusivamente em **João Pessoa**. Não encontrei um local específico correspondente à sua busca em nossa base oficial do município. Como posso te ajudar hoje? Você pode me perguntar sobre nossas praias, centro histórico, gastronomia típica, eventos ou solicitar um roteiro inteligente!"
                     };
                 }
-                $sugestoes = ["O que fazer hoje?", "Roteiros recomendados", "Atrativos acessíveis PNE", "Telefones de emergência"];
+                $sugestoes = match ($idioma) {
+                    'en' => ["What to do today?", "Top attractions in JP", "PNE Accessible routes", "Emergency numbers"],
+                    'es' => ["¿Qué hacer hoy?", "Atractivos de JP", "Rutas accesibles", "Teléfonos útiles"],
+                    default => ["O que fazer hoje?", "Atrativos de João Pessoa", "Praias mais bonitas", "Telefones de emergência"]
+                };
                 break;
         }
 
@@ -535,6 +1065,7 @@ class AiItineraryService
             'resposta' => $resposta,
             'cards' => $cards,
             'sugestoes' => $sugestoes,
+            'dados_extras' => $dadosExtras ?? null,
             'idioma' => $idioma,
             'fonte_dados' => 'Base de Dados Oficial e Auditada do Município (System-PITE)',
             'supervisao_humana' => true,

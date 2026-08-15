@@ -300,13 +300,15 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(124,58,237,0.08); color: var(--pite-violet);">
-                    <i class="bi bi-signpost-2-fill"></i>
+            <a href="{{ route('turista.planos') }}" class="text-decoration-none">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(124,58,237,0.08); color: var(--pite-violet);">
+                        <i class="bi bi-signpost-2-fill"></i>
+                    </div>
+                    <div class="stat-number" style="color: var(--pite-violet);">{{ $totalRoteiros }}</div>
+                    <div class="small text-muted fw-medium">Planos IA</div>
                 </div>
-                <div class="stat-number" style="color: var(--pite-violet);">{{ $totalRoteiros }}</div>
-                <div class="small text-muted fw-medium">Roteiros</div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -495,9 +497,13 @@
                         <i class="bi bi-map me-2" style="color: var(--pite-sky);"></i>
                         <span class="small fw-semibold">Mapa Interativo</span>
                     </a>
-                    <a href="{{ route('portal.roteiros') }}" class="btn text-start" style="background: rgba(124,58,237,0.04); border-radius: 12px; padding: 12px 16px;">
-                        <i class="bi bi-stars me-2" style="color: var(--pite-violet);"></i>
-                        <span class="small fw-semibold">Criar Roteiro com IA</span>
+                    <a href="{{ route('turista.planos') }}" class="btn text-start" style="background: rgba(124,58,237,0.04); border-radius: 12px; padding: 12px 16px;">
+                        <i class="bi bi-map-fill me-2" style="color: var(--pite-violet);"></i>
+                        <span class="small fw-semibold">Meus Planos IA</span>
+                    </a>
+                    <a href="#" onclick="abrirIaAssistant(); return false;" class="btn text-start" style="background: rgba(245,158,11,0.06); border-radius: 12px; padding: 12px 16px;">
+                        <i class="bi bi-stars me-2" style="color: var(--pite-gold);"></i>
+                        <span class="small fw-semibold">Conversar com Guia IA</span>
                     </a>
                 </div>
             </div>
