@@ -59,7 +59,7 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Telefone / WhatsApp</label>
-                            <input type="text" class="form-control rounded-3" placeholder="(00) 90000-0000">
+                            <input type="text" id="telefoneEmp" name="telefone" class="form-control rounded-3" placeholder="(00) 90000-0000" maxlength="15">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Instagram (@)</label>
@@ -85,3 +85,28 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const telInput = document.getElementById('telefoneEmp');
+    if (telInput) {
+        telInput.addEventListener('input', function() {
+            let v = this.value.replace(/\D/g, '');
+            if (v.length > 11) v = v.substring(0, 11);
+
+            if (v.length > 10) {
+                v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+            } else if (v.length > 6) {
+                v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+            } else if (v.length > 2) {
+                v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+            } else if (v.length > 0) {
+                v = v.replace(/^(\d*)$/, '($1');
+            }
+            this.value = v;
+        });
+    }
+});
+</script>
+@endpush

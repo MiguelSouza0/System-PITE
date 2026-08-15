@@ -31,6 +31,8 @@ use App\Http\Controllers\Portal\AvaliacaoController;
 Route::get('/atrativos', [AtrativoController::class, 'index'])->name('portal.atrativos.index');
 Route::get('/atrativos/{slug}', [AtrativoController::class, 'show'])->name('portal.atrativos.show');
 Route::post('/atrativos/{slug}/avaliar', [AvaliacaoController::class, 'store'])->name('portal.atrativos.avaliar');
+Route::put('/avaliacoes/{avaliacao}', [AvaliacaoController::class, 'update'])->name('portal.avaliacoes.update');
+Route::delete('/avaliacoes/{avaliacao}', [AvaliacaoController::class, 'destroy'])->name('portal.avaliacoes.destroy');
 
 Route::get('/mapa-interativo', [MapaController::class, 'index'])->name('portal.mapa');
 
@@ -70,6 +72,7 @@ Route::middleware(['auth', 'perfil:turista'])->prefix('turista')->name('turista.
 
 // --- API JSON para Mapa Interativo ---
 Route::get('/api/atrativos-mapa', [MapaController::class, 'atrativosJson'])->name('api.atrativos.mapa');
+Route::get('/api/eventos-mapa', [MapaController::class, 'eventosJson'])->name('api.eventos.mapa');
 
 
 // --- PAINEL DO EMPREENDEDOR LOCAL ---

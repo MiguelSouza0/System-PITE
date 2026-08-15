@@ -158,10 +158,9 @@
                                         <i class="bi bi-x-lg"></i> Rejeitar
                                     </button>
                                 @elseif($emp->status_aprovacao === 'aprovado' && $emp->selo_validado)
-                                    {{-- Revogar Selo --}}
-                                    <form method="POST" action="{{ route('admin.empreendedores.revogar', $emp) }}" class="d-inline">
+                                    <form id="formRevogarSelo{{ $emp->id }}" method="POST" action="{{ route('admin.empreendedores.revogar', $emp) }}" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill" onclick="return confirm('Tem certeza que deseja revogar o selo?')" title="Revogar Selo Municipal">
+                                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" onclick="confirmarAcao('Tem certeza que deseja revogar o Selo Municipal deste estabelecimento?', () => document.getElementById('formRevogarSelo{{ $emp->id }}').submit(), 'Revogar Selo')" title="Revogar Selo Municipal">
                                             <i class="bi bi-shield-x"></i> Revogar Selo
                                         </button>
                                     </form>

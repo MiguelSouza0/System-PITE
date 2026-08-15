@@ -459,9 +459,53 @@
         </div>
     </footer>
 
+    <!-- Modal de Confirmação Minimalista Global -->
+    <div class="modal fade" id="modalConfirmacaoGlobal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="backdrop-filter: blur(16px); background: rgba(255, 255, 255, 0.98);">
+                <div class="modal-body p-4 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background: rgba(244, 63, 94, 0.1); color: #f43f5e; font-size: 1.5rem;">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-2 text-dark" id="modalConfirmacaoTitulo" style="font-family: 'Outfit', sans-serif;">Confirmação</h6>
+                    <p class="text-muted small mb-4 px-2" id="modalConfirmacaoMsg" style="line-height: 1.5;">Tem certeza que deseja prosseguir com esta ação?</p>
+                    
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-light rounded-pill px-4 py-2 small fw-semibold text-muted" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger rounded-pill px-4 py-2 small fw-semibold shadow-sm" id="btnConfirmarAcao">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Modal Minimalista de Confirmação
+        let callbackConfirmacao = null;
+        function confirmarAcao(mensagem, callback, titulo = 'Confirmar Ação') {
+            document.getElementById('modalConfirmacaoMsg').textContent = mensagem;
+            document.getElementById('modalConfirmacaoTitulo').textContent = titulo;
+            callbackConfirmacao = callback;
+            const modalEl = document.getElementById('modalConfirmacaoGlobal');
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalInstance.show();
+        }
+
+        document.getElementById('btnConfirmarAcao')?.addEventListener('click', function() {
+            const modalEl = document.getElementById('modalConfirmacaoGlobal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+            if (typeof callbackConfirmacao === 'function') {
+                callbackConfirmacao();
+            }
+        });
+
         // Navbar scroll effect
         window.addEventListener('scroll', () => {
             document.getElementById('mainNav')?.classList.toggle('scrolled', window.scrollY > 40);

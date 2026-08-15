@@ -89,10 +89,9 @@
                             <a href="{{ route('admin.atrativos.edit', $at) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('admin.atrativos.destroy', $at) }}" method="POST" class="d-inline"
-                                  onsubmit="return confirm('Deseja desativar este atrativo?')">
+                            <form id="formDeleteAtrativo{{ $at->id }}" action="{{ route('admin.atrativos.destroy', $at) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="confirmarAcao('Deseja realmente desativar este atrativo turístico?', () => document.getElementById('formDeleteAtrativo{{ $at->id }}').submit(), 'Desativar Atrativo')">
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>

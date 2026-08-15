@@ -99,10 +99,10 @@
                                 <a href="{{ route('admin.eventos.edit', $evento) }}" class="btn btn-sm btn-outline-primary rounded-pill" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.eventos.destroy', $evento) }}" class="d-inline">
+                                <form id="formDeleteEvento{{ $evento->id }}" method="POST" action="{{ route('admin.eventos.destroy', $evento) }}" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('Desativar este evento?')" title="Desativar">
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="confirmarAcao('Deseja realmente desativar este evento?', () => document.getElementById('formDeleteEvento{{ $evento->id }}').submit(), 'Desativar Evento')" title="Desativar">
                                         <i class="bi bi-eye-slash"></i>
                                     </button>
                                 </form>

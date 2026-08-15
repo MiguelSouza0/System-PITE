@@ -60,9 +60,15 @@
                 <hr>
 
                 <div class="d-grid gap-2">
-                    <a href="{{ route('portal.mapa') }}" class="btn btn-pite rounded-pill">
-                        <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
-                    </a>
+                    @if($evento->atrativo && $evento->atrativo->latitude && $evento->atrativo->longitude)
+                        <a href="{{ route('portal.mapa', ['lat' => $evento->atrativo->latitude, 'lng' => $evento->atrativo->longitude, 'evento' => $evento->id]) }}" class="btn btn-pite rounded-pill">
+                            <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
+                        </a>
+                    @else
+                        <a href="{{ route('portal.mapa') }}" class="btn btn-pite rounded-pill">
+                            <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

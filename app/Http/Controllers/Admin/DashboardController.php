@@ -26,7 +26,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // --- Contadores reais ---
+        // 1. --- CONTADORES EXECUTIVOS GERAIS ---
         $stats = [
             'total_atrativos'          => Atrativo::count(),
             'atrativos_ativos'         => Atrativo::where('ativo', true)->count(),
@@ -41,7 +41,54 @@ class DashboardController extends Controller
             'total_categorias'         => Categoria::count(),
         ];
 
-        // --- Atrativos por categoria (para gráfico de pizza) ---
+        // 2. --- INTELIGÊNCIA DE SAZONALIDADE & FLUXO (Últimos 12 meses) ---
+        $mesesNomes = [
+            1 => 'Jan', 2 => 'Fev', 3 => 'Mar', 4 => 'Abr', 5 => 'Mai', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Ago', 9 => 'Set', 10 => 'Out', 11 => 'Nov', 12 => 'Dez'
+        ];
+
+        // Fluxo de avaliações/visitas por mês
+        $visitasPorMesRaw = Avaliacao::select(
+                DB::raw('EXTRACT(MONTH FROM created_at) as mes'),
+                DB::raw('count(*) as total')
+            )
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->get();
+
+        $fluxoMensal = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $registro = $visitasPorMesRaw->firstWhere('mes', $m);
+            $fluxoMensal[$mesesNomes[$m]] = $registro ? (int) $registro->total : 0;
+        }
+
+        // 3. --- PERFIL E ORIGEM DO TURISTA ---
+        $origemTuristas = Avaliacao::select('origem_turista', DB::raw('count(*) as total'))
+            ->whereNotNull('origem_turista')
+            ->groupBy('origem_turista')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                $labels = [
+                    'local' => 'Moradores Locais',
+                    'nacional' => 'Turistas Nacionais',
+                    'internacional' => 'Turistas Internacionais'
+                ];
+                return [$labels[$item->origem_turista] ?? ucfirst($item->origem_turista) => $item->total];
+            });
+
+        // 4. --- AVALIAÇÃO DO SETOR & IMPACTO ECONÔMICO ---
+        $ticketMedio = Atrativo::where('preco_medio', '>', 0)->avg('preco_medio') ?? 0;
+        $eventosGratuitos = Evento::where('gratuito', true)->count();
+        $eventosPagos = Evento::where('gratuito', false)->count();
+
+        // 5. --- DIAGNÓSTICO DE ACESSIBILIDADE (PNE) ---
+        $atrativosAcessiveis = Atrativo::whereJsonContains('niveis_acessibilidade->cadeirante', true)->count();
+        $percentualAcessibilidade = $stats['total_atrativos'] > 0 
+            ? round(($atrativosAcessiveis / $stats['total_atrativos']) * 100, 1) 
+            : 0;
+
+        // 6. --- ATRATIVOS POR CATEGORIA ---
         $atrativosPorCategoria = Atrativo::select('categoria_id', DB::raw('count(*) as total'))
             ->groupBy('categoria_id')
             ->with('categoria:id,nome')
@@ -51,33 +98,29 @@ class DashboardController extends Controller
                 'total' => $item->total,
             ]);
 
-        // --- Empreendedores por status (para gráfico de barras) ---
+        // 7. --- EMPREENDEDORES POR STATUS ---
         $empreendedoresPorStatus = Empreendedor::select('status_aprovacao', DB::raw('count(*) as total'))
             ->groupBy('status_aprovacao')
             ->pluck('total', 'status_aprovacao');
 
-        // --- Últimos atrativos cadastrados ---
-        $ultimosAtrativos = Atrativo::with('categoria')
-            ->latest()
-            ->take(5)
-            ->get();
+        // 8. --- ÚLTIMOS ATRATIVOS & PENDENTES ---
+        $ultimosAtrativos = Atrativo::with('categoria')->latest()->take(5)->get();
+        $pendentes = Empreendedor::where('status_aprovacao', 'pendente')->latest()->take(5)->get();
 
-        // --- Empreendedores pendentes ---
-        $pendentes = Empreendedor::where('status_aprovacao', 'pendente')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // --- Indicadores ESG ---
+        // 9. --- INDICADORES ESG & PILARES ---
         $indicadoresEsg = $this->esgService->consolidarIndicadoresMunicipais();
-
-        // --- ESG por pilar (para gráfico radar) ---
         $esgPorPilar = IndicadorEsg::select('pilar', DB::raw('AVG(valor) as media'))
             ->groupBy('pilar')
             ->pluck('media', 'pilar');
 
         $viewData = compact(
             'stats',
+            'fluxoMensal',
+            'origemTuristas',
+            'ticketMedio',
+            'eventosGratuitos',
+            'eventosPagos',
+            'percentualAcessibilidade',
             'atrativosPorCategoria',
             'empreendedoresPorStatus',
             'ultimosAtrativos',

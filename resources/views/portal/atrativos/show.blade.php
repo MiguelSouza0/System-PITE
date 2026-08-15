@@ -104,17 +104,107 @@
                         <p class="small text-muted mb-4">Todas as avaliações no System-PITE exigem comprovação de visita ou geolocalização auditada para eliminar avaliações fraudulentas.</p>
 
                         @forelse($atrativo->avaliacoes ?? [] as $avaliacao)
-                            <div class="border rounded-3 p-3 mb-3">
+                            <div class="border rounded-3 p-3 mb-3 bg-white shadow-sm" id="avaliacao-card-{{ $avaliacao->id }}">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <strong>{{ $avaliacao->usuario?->name ?? 'Turista Validado' }}</strong>
-                                    <div class="text-warning">
-                                        @for($i=1; $i<=5; $i++)
-                                            <i class="bi {{ $i <= $avaliacao->nota ? 'bi-star-fill' : 'bi-star' }}"></i>
-                                        @endfor
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center fw-bold text-success border" style="width:34px;height:34px;font-size:0.85rem;">
+                                            {{ strtoupper(substr($avaliacao->usuario?->name ?? 'T', 0, 1)) }}
+                                        </div>
+                                        <div>
+                                            <strong class="d-block leading-tight">{{ $avaliacao->usuario?->name ?? 'Turista Validado' }}</strong>
+                                            <small class="text-muted" style="font-size:0.75rem;">
+                                                <i class="bi bi-clock me-1"></i>{{ $avaliacao->created_at ? $avaliacao->created_at->diffForHumans() : 'Recentemente' }}
+                                                @if($avaliacao->origem_turista)
+                                                    • <span class="badge bg-light text-muted border">{{ ucfirst($avaliacao->origem_turista) }}</span>
+                                                @endif
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-warning">
+                                            @for($i=1; $i<=5; $i++)
+                                                <i class="bi {{ $i <= $avaliacao->nota ? 'bi-star-fill' : 'bi-star' }}"></i>
+                                            @endfor
+                                        </div>
+                                        @auth
+                                            @if(auth()->id() === $avaliacao->user_id || auth()->user()->isAdmin())
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" style="width:30px;height:30px;padding:0;">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                        <li>
+                                                            <button class="dropdown-item small" type="button" data-bs-toggle="modal" data-bs-target="#modalEditarAvaliacao{{ $avaliacao->id }}">
+                                                                <i class="bi bi-pencil me-2 text-primary"></i> Editar Comentário
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <form id="formExcluirAvaliacao{{ $avaliacao->id }}" action="{{ route('portal.avaliacoes.destroy', $avaliacao->id) }}" method="POST">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="dropdown-item small text-danger" onclick="confirmarAcao('Tem certeza que deseja excluir sua avaliação?', () => document.getElementById('formExcluirAvaliacao{{ $avaliacao->id }}').submit(), 'Excluir Avaliação')">
+                                                                    <i class="bi bi-trash me-2"></i> Excluir
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            @endif
+                                        @endauth
                                     </div>
                                 </div>
-                                <p class="small text-muted mb-0">{{ $avaliacao->comentario }}</p>
+                                <p class="small text-muted mb-0" style="line-height:1.6;">{{ $avaliacao->comentario }}</p>
                             </div>
+
+                            @auth
+                                @if(auth()->id() === $avaliacao->user_id || auth()->user()->isAdmin())
+                                    <!-- Modal de Edição da Avaliação -->
+                                    <div class="modal fade" id="modalEditarAvaliacao{{ $avaliacao->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content rounded-4 border-0 shadow">
+                                                <div class="modal-header border-0 pb-0">
+                                                    <h5 class="modal-title fw-bold" style="font-family:'Outfit';">
+                                                        <i class="bi bi-pencil-square text-primary me-2"></i>Editar Sua Avaliação
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                </div>
+                                                <form action="{{ route('portal.avaliacoes.update', $avaliacao->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body py-3">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-semibold">Nota (1 a 5 Estrelas)</label>
+                                                            <select name="nota" class="form-select rounded-3" required>
+                                                                <option value="5" {{ $avaliacao->nota == 5 ? 'selected' : '' }}>⭐⭐⭐⭐⭐ 5 - Excelente</option>
+                                                                <option value="4" {{ $avaliacao->nota == 4 ? 'selected' : '' }}>⭐⭐⭐⭐ 4 - Muito Bom</option>
+                                                                <option value="3" {{ $avaliacao->nota == 3 ? 'selected' : '' }}>⭐⭐⭐ 3 - Bom</option>
+                                                                <option value="2" {{ $avaliacao->nota == 2 ? 'selected' : '' }}>⭐⭐ 2 - Regular</option>
+                                                                <option value="1" {{ $avaliacao->nota == 1 ? 'selected' : '' }}>⭐ 1 - Ruim</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-semibold">Sua Origem</label>
+                                                            <select name="origem_turista" class="form-select rounded-3">
+                                                                <option value="local" {{ $avaliacao->origem_turista == 'local' ? 'selected' : '' }}>Morador Local</option>
+                                                                <option value="nacional" {{ $avaliacao->origem_turista == 'nacional' ? 'selected' : '' }}>Turista Nacional</option>
+                                                                <option value="internacional" {{ $avaliacao->origem_turista == 'internacional' ? 'selected' : '' }}>Turista Internacional</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small fw-semibold">Comentário / Relato</label>
+                                                            <textarea name="comentario" class="form-control rounded-3" rows="4" required maxlength="1000">{{ old('comentario', $avaliacao->comentario) }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-pite rounded-3 px-4">Salvar Alterações</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endauth
                         @empty
                             <div class="p-3 bg-light rounded-3 text-center small text-muted">
                                 Seja o primeiro visitante a enviar uma avaliação verificada!
@@ -154,52 +244,10 @@
                     </li>
                 </ul>
 
-                {{-- Ações do Turista --}}
-                @auth
-                    @if(auth()->user()->isTurista())
-                    <div class="d-grid gap-2 mb-3" style="border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                        {{-- Favoritar --}}
-                        <form method="POST" action="{{ route('turista.favoritos.toggle') }}" id="formFavoritar">
-                            @csrf
-                            <input type="hidden" name="favoritavel_id" value="{{ $atrativo->id }}">
-                            <input type="hidden" name="favoritavel_type" value="atrativo">
-                            @php $jaFavoritou = auth()->user()->favoritou($atrativo); @endphp
-                            <button type="submit" class="btn w-100 rounded-3 fw-bold {{ $jaFavoritou ? 'btn-danger' : 'btn-outline-danger' }}" style="border-radius: 14px !important;">
-                                <i class="bi bi-heart{{ $jaFavoritou ? '-fill' : '' }} me-1"></i>
-                                {{ $jaFavoritou ? 'Favoritado ❤️' : 'Adicionar aos Favoritos' }}
-                            </button>
-                        </form>
-
-                        {{-- Marcar como Visitado --}}
-                        @php $jaVisitou = auth()->user()->jaVisitou($atrativo); @endphp
-                        @if($jaVisitou)
-                            <button class="btn btn-success w-100 rounded-3 fw-bold" disabled style="border-radius: 14px !important;">
-                                <i class="bi bi-check-circle-fill me-1"></i> Visita Registrada ✅
-                            </button>
-                        @else
-                            <form method="POST" action="{{ route('turista.visita.registrar') }}">
-                                @csrf
-                                <input type="hidden" name="atrativo_id" value="{{ $atrativo->id }}">
-                                <button type="submit" class="btn btn-outline-success w-100 rounded-3 fw-bold" style="border-radius: 14px !important;">
-                                    <i class="bi bi-geo-alt-fill me-1"></i> Marcar como Visitado
-                                </button>
-                            </form>
-                        @endif
-                    </div>
-                    @endif
-                @else
-                    <div class="mb-3 p-3 rounded-3 text-center" style="background: rgba(4,120,87,0.04); border: 1px dashed rgba(4,120,87,0.2);">
-                        <p class="small text-muted mb-2">Crie sua conta para favoritar e registrar visitas</p>
-                        <a href="{{ route('turista.registro') }}" class="btn btn-sm btn-pite">
-                            <i class="bi bi-person-plus me-1"></i> Criar Conta Gratuita
-                        </a>
-                    </div>
-                @endauth
-
                 <a href="{{ route('portal.roteiros') }}" class="btn btn-warning w-100 rounded-3 fw-bold mb-2">
                     <i class="bi bi-magic me-1"></i> Incluir no Meu Roteiro IA
                 </a>
-                <a href="{{ route('portal.mapa') }}" class="btn btn-outline-primary w-100 rounded-3 fw-semibold">
+                <a href="{{ route('portal.mapa', ['lat' => $atrativo->latitude, 'lng' => $atrativo->longitude, 'atrativo' => $atrativo->id]) }}" class="btn btn-outline-primary w-100 rounded-3 fw-semibold">
                     <i class="bi bi-map me-1"></i> Ver no Mapa Interativo
                 </a>
             </div>

@@ -119,10 +119,10 @@
                         <span class="small text-muted">ou</span>
                     </div>
 
-                    {{-- Quick Login para Demo --}}
-                    <a href="{{ route('quick-login', 'turista') }}" class="btn w-100 mb-3" style="background: rgba(4,120,87,0.06); color: var(--pite-emerald); border: 1.5px solid rgba(4,120,87,0.2); border-radius: 14px; padding: 12px; font-weight: 600;">
-                        <i class="bi bi-lightning me-1"></i> Acesso Rápido (Demonstração)
-                    </a>
+                    {{-- Quick Login para Demo (Abre Modal de Seleção de Perfil) --}}
+                    <button type="button" class="btn w-100 mb-3 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#modalAcessoRapido" style="background: rgba(4,120,87,0.06); color: var(--pite-emerald); border: 1.5px solid rgba(4,120,87,0.2); border-radius: 14px; padding: 12px; font-weight: 600;">
+                        <i class="bi bi-lightning-charge-fill text-warning"></i> Acesso Rápido (Demonstração)
+                    </button>
 
                     <div class="text-center mt-3">
                         <span class="small text-muted">Não tem conta?</span>
@@ -133,4 +133,95 @@
         </div>
     </div>
 </section>
+
+<!-- Modal Minimalista de Seleção de Perfil de Acesso Rápido -->
+<div class="modal fade" id="modalAcessoRapido" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.98);">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-warning text-dark px-2 py-1 small fw-bold">⚡ DEMO</span>
+                        <h5 class="modal-title fw-bold mb-0 text-dark" style="font-family:'Outfit', sans-serif;">Escolha o Tipo de Acesso</h5>
+                    </div>
+                    <p class="text-muted small mb-0 mt-1">Selecione uma persona para explorar o sistema instantaneamente</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex flex-column gap-2">
+                    {{-- Turista --}}
+                    <a href="{{ route('quick-login', 'turista') }}" class="p-3 rounded-3 text-decoration-none border d-flex align-items-center justify-content-between transition-all" style="background:#f8fafc; border-color:#e2e8f0; color:#1e293b;" onmouseover="this.style.background='#f0fdf4'; this.style.borderColor='#86efac';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width:42px; height:42px; background:linear-gradient(135deg, #059669, #10b981);">
+                                <i class="bi bi-person-heart fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark small fw-bold">Turista / Cidadão</strong>
+                                <span class="text-muted small" style="font-size:0.78rem;">Portal, Roteiros IA, Favoritos e Avaliações</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+
+                    {{-- Prefeito --}}
+                    <a href="{{ route('quick-login', 'prefeito') }}" class="p-3 rounded-3 text-decoration-none border d-flex align-items-center justify-content-between transition-all" style="background:#f8fafc; border-color:#e2e8f0; color:#1e293b;" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width:42px; height:42px; background:linear-gradient(135deg, #1e293b, #334155);">
+                                <i class="bi bi-person-badge fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark small fw-bold">Prefeito Municipal</strong>
+                                <span class="text-muted small" style="font-size:0.78rem;">Dashboard Executivo, Inteligência e ESG</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+
+                    {{-- Secretário de Turismo --}}
+                    <a href="{{ route('quick-login', 'secretario') }}" class="p-3 rounded-3 text-decoration-none border d-flex align-items-center justify-content-between transition-all" style="background:#f8fafc; border-color:#e2e8f0; color:#1e293b;" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width:42px; height:42px; background:linear-gradient(135deg, #2563eb, #3b82f6);">
+                                <i class="bi bi-briefcase fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark small fw-bold">Secretário de Turismo</strong>
+                                <span class="text-muted small" style="font-size:0.78rem;">Gestão Estratégica, Atrativos e Selos</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+
+                    {{-- Servidor Técnico --}}
+                    <a href="{{ route('quick-login', 'servidor') }}" class="p-3 rounded-3 text-decoration-none border d-flex align-items-center justify-content-between transition-all" style="background:#f8fafc; border-color:#e2e8f0; color:#1e293b;" onmouseover="this.style.background='#f0fdfa'; this.style.borderColor='#99f6e4';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width:42px; height:42px; background:linear-gradient(135deg, #0d9488, #14b8a6);">
+                                <i class="bi bi-person-gear fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark small fw-bold">Servidor Técnico</strong>
+                                <span class="text-muted small" style="font-size:0.78rem;">Operação diária, Cadastros e Auditoria</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+
+                    {{-- Empreendedor Local --}}
+                    <a href="{{ route('quick-login', 'empreendedor') }}" class="p-3 rounded-3 text-decoration-none border d-flex align-items-center justify-content-between transition-all" style="background:#f8fafc; border-color:#e2e8f0; color:#1e293b;" onmouseover="this.style.background='#fffbeb'; this.style.borderColor='#fde68a';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width:42px; height:42px; background:linear-gradient(135deg, #d97706, #f59e0b);">
+                                <i class="bi bi-shop fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark small fw-bold">Empreendedor Local</strong>
+                                <span class="text-muted small" style="font-size:0.78rem;">Pousadas, Restaurantes e Selo Verde</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

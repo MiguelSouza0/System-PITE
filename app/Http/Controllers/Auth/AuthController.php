@@ -30,7 +30,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'As credenciais fornecidas não conferem com nossos registros.',
+            'email' => 'Usuário ou senha incorretos. Verifique os dados digitados.',
         ])->onlyInput('email');
     }
 
@@ -40,6 +40,8 @@ class AuthController extends Controller
             'prefeito' => 'prefeito@municipio.gov.br',
             'secretario' => 'secretario.turismo@municipio.gov.br',
             'servidor' => 'tecnico.turismo@municipio.gov.br',
+            'turista' => 'turista@email.com',
+            'empreendedor' => 'pousada.recanto@email.com',
         ];
 
         if (!isset($emails[$perfil])) {
@@ -50,6 +52,12 @@ class AuthController extends Controller
         if ($user) {
             Auth::login($user);
             request()->session()->regenerate();
+            if ($user->isTurista()) {
+                return redirect()->route('turista.dashboard');
+            }
+            if ($user->isEmpreendedor()) {
+                return redirect()->route('empreendedor.dashboard');
+            }
             return redirect()->route('admin.dashboard');
         }
 

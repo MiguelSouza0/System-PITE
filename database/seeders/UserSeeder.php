@@ -67,5 +67,36 @@ class UserSeeder extends Seeder
                 'necessidades_especiais' => [],
             ]
         );
+
+        // Empreendedor de demonstração (acesso rápido)
+        $perfilEmpreendedor = Perfil::where('slug', 'empreendedor')->first();
+
+        $userEmp = User::updateOrCreate(
+            ['email' => 'pousada.recanto@email.com'],
+            [
+                'name' => 'Carlos Eduardo (Pousada Recanto)',
+                'password' => Hash::make('SenhaPITE2026!'),
+                'perfil_id' => $perfilEmpreendedor?->id,
+                'ativo' => true
+            ]
+        );
+
+        \App\Models\Empreendedor::updateOrCreate(
+            ['user_id' => $userEmp->id],
+            [
+                'cnpj_cpf' => '12.345.678/0001-90',
+                'razao_social' => 'Pousada Recanto das Serras LTDA',
+                'nome_fantasia' => 'Pousada Recanto das Serras',
+                'tipo_servico' => 'Hospedagem & Hotelaria',
+                'descricao' => 'Pousada ecológica com selo verde, café colonial e quartos acessíveis.',
+                'endereco' => 'Estrada das Serras, 500',
+                'bairro' => 'Alto da Serra',
+                'telefone' => '(83) 98888-7777',
+                'email' => 'pousada.recanto@email.com',
+                'status_aprovacao' => 'aprovado',
+                'selo_validado' => true,
+                'vencimento_documentos' => now()->addYear(),
+            ]
+        );
     }
 }
