@@ -1272,6 +1272,40 @@
             return id;
         }
 
+        function formatMarkdown(text) {
+            if (!text) return '';
+            
+            // 1. Escapa HTML para prevenir XSS
+            let html = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // 2. Headings (###, ##, #)
+            html = html.replace(/^### (.*$)/gim, '<strong class="d-block text-dark fw-bold mt-2 mb-1">$1</strong>');
+            html = html.replace(/^## (.*$)/gim, '<strong class="d-block text-dark fw-bold fs-6 mt-2 mb-1">$1</strong>');
+            html = html.replace(/^# (.*$)/gim, '<strong class="d-block text-dark fw-bold fs-6 mt-2 mb-1">$1</strong>');
+            
+            // 3. Negrito (**texto** ou __texto__)
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            
+            // 4. Itálico (*texto* ou _texto_)
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+
+            // 5. Código inline (`código`)
+            html = html.replace(/`(.*?)`/g, '<code class="bg-light px-1 text-primary rounded">$1</code>');
+
+            // 6. Listas não ordenadas (linhas que começam com - ou *)
+            html = html.replace(/^\s*[-*+]\s+(.*$)/gim, '• $1');
+
+            // 7. Quebras de linha (\n para <br>)
+            html = html.replace(/\n/g, '<br>');
+
+            return html;
+        }
+
         function removeTypingIndicator(id) {
             const el = document.getElementById(id);
             if (el) el.remove();
@@ -1333,7 +1367,7 @@
                     <i class="bi bi-robot"></i>
                 </div>
                 <div class="p-3 bg-white rounded-4 shadow-sm border" style="max-width:88%;">
-                    <p class="small text-dark mb-1" style="line-height:1.5; white-space:pre-line;">${dados.resposta}</p>
+                    <div class="small text-dark mb-1 chat-markdown-body" style="line-height:1.5;">${formatMarkdown(dados.resposta)}</div>
                     ${cardsHtml}
                     ${planoCardHtml}
                     ${sugestoesHtml}
@@ -1392,7 +1426,8 @@
         btnVoiceLast?.addEventListener('click', function() {
             if ('speechSynthesis' in window && lastBotResponse) {
                 speechSynthesis.cancel();
-                const utter = new SpeechSynthesisUtterance(lastBotResponse.replace(/<[^>]*>?/gm, ''));
+                const utterText = lastBotResponse.replace(/\*\*/g, '').replace(/<[^>]*>?/gm, '');
+                const utter = new SpeechSynthesisUtterance(utterText);
                 utter.lang = (langSelect?.value === 'en' ? 'en-US' : (langSelect?.value === 'es' ? 'es-ES' : 'pt-BR'));
                 speechSynthesis.speak(utter);
             }
