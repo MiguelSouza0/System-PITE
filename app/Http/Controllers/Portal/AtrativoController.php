@@ -11,7 +11,8 @@ class AtrativoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Atrativo::with('categoria')->where('ativo', true);
+        // Somente atrativos aprovados e ativos são visíveis no portal público
+        $query = Atrativo::with('categoria')->visivelPortal();
 
         if ($request->filled('categoria')) {
             $query->where('categoria_id', $request->categoria);
@@ -39,7 +40,7 @@ class AtrativoController extends Controller
     {
         $atrativo = Atrativo::with(['categoria', 'avaliacoes.usuario'])
             ->where('slug', $slug)
-            ->where('ativo', true)
+            ->visivelPortal()
             ->firstOrFail();
 
         return view('portal.atrativos.show', compact('atrativo'));

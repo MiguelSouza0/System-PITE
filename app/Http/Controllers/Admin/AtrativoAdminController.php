@@ -22,13 +22,21 @@ class AtrativoAdminController extends Controller
             $query->where('categoria_id', $request->categoria);
         }
         if ($request->filled('status')) {
-            $query->where('ativo', $request->status === 'ativo');
+            $query->where('status_aprovacao', $request->status);
         }
 
         $atrativos = $query->latest()->paginate(15);
         $categorias = Categoria::orderBy('nome')->get();
 
-        return view('admin.atrativos.index', compact('atrativos', 'categorias'));
+        // Contadores por status de aprovação
+        $contadores = [
+            'total'      => Atrativo::count(),
+            'pendentes'  => Atrativo::pendente()->count(),
+            'aprovados'  => Atrativo::aprovado()->count(),
+            'suspensos'  => Atrativo::suspenso()->count(),
+        ];
+
+        return view('admin.atrativos.index', compact('atrativos', 'categorias', 'contadores'));
     }
 
     public function create()
@@ -60,7 +68,11 @@ class AtrativoAdminController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['nome']);
-        $validated['ativo'] = true;
+
+        // Novo cadastro entra como PENDENTE — aguardando aprovação do Prefeito
+        $validated['status_aprovacao'] = 'pendente';
+        $validated['ativo'] = false; // Não visível no portal até aprovação
+
         $validated['niveis_acessibilidade'] = [
             'cadeirante' => $request->boolean('acess_cadeirante'),
             'visual' => $request->boolean('acess_visual'),
@@ -75,7 +87,7 @@ class AtrativoAdminController extends Controller
 
         return redirect()
             ->route('admin.atrativos.index')
-            ->with('sucesso', 'Atrativo "' . $atrativo->nome . '" cadastrado com sucesso!');
+            ->with('sucesso', 'Atrativo "' . $atrativo->nome . '" cadastrado com sucesso! Aguardando aprovação do Prefeito.');
     }
 
     public function edit(Atrativo $atrativo)
@@ -104,7 +116,6 @@ class AtrativoAdminController extends Controller
             'contato_email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'tempo_medio_visita' => 'nullable|string|max:100',
-            'ativo' => 'nullable|boolean',
         ]);
 
         $antes = $atrativo->toArray();
@@ -116,13 +127,23 @@ class AtrativoAdminController extends Controller
             'piso_tatil' => $request->boolean('acess_piso_tatil'),
         ];
 
+        // Se o registro estava suspenso, ao ser editado pelo Técnico volta para 'pendente'
+        if ($atrativo->status_aprovacao === 'suspenso') {
+            $validated['status_aprovacao'] = 'pendente';
+            // Mantém ativo = false até aprovação
+        }
+
         $atrativo->update($validated);
 
         Auditoria::registrar('editou', 'atrativos', $atrativo->id, $antes, $atrativo->fresh()->toArray());
 
+        $mensagem = $atrativo->status_aprovacao === 'pendente'
+            ? 'Atrativo "' . $atrativo->nome . '" atualizado! Aguardando nova aprovação do Prefeito.'
+            : 'Atrativo "' . $atrativo->nome . '" atualizado!';
+
         return redirect()
             ->route('admin.atrativos.index')
-            ->with('sucesso', 'Atrativo "' . $atrativo->nome . '" atualizado!');
+            ->with('sucesso', $mensagem);
     }
 
     public function destroy(Atrativo $atrativo)

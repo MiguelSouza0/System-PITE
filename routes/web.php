@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\AtrativoAdminController;
 use App\Http\Controllers\Admin\EmpreendedorAdminController;
 use App\Http\Controllers\Admin\EventoAdminController;
 use App\Http\Controllers\Admin\AuditoriaController;
+use App\Http\Controllers\Admin\AprovacaoController;
+use App\Http\Controllers\Admin\RelatorioController;
 use App\Http\Controllers\Auth\AuthController;
 
 /*
@@ -87,27 +89,23 @@ Route::middleware(['auth', 'perfil:empreendedor'])->prefix('empreendedor')->name
 });
 
 
-use App\Http\Controllers\Admin\RelatorioController;
-
-// --- PAINEL ADMINISTRATIVO (PREFEITO, SECRETÁRIO, SERVIDOR) ---
+// --- PAINEL ADMINISTRATIVO ---
+// Rotas compartilhadas (leitura/dashboard): prefeito, secretário, servidor
 Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Listagem de Atrativos (somente leitura para o Prefeito)
+    Route::get('/atrativos', [AtrativoAdminController::class, 'index'])->name('atrativos.index');
+
+    // Listagem de Eventos (somente leitura para o Prefeito)
+    Route::get('/eventos', [EventoAdminController::class, 'index'])->name('eventos.index');
+
+    // Listagem de Empreendedores
+    Route::get('/empreendedores', [EmpreendedorAdminController::class, 'index'])->name('empreendedores.index');
 
     // Exportação de Relatórios
     Route::get('/relatorios/csv', [RelatorioController::class, 'exportarCsv'])->name('relatorios.csv');
     Route::get('/relatorios/esg-pdf', [RelatorioController::class, 'exportarEsgPdf'])->name('relatorios.esg-pdf');
-
-    // CRUD de Atrativos
-    Route::resource('atrativos', AtrativoAdminController::class)->except(['show']);
-
-    // Gestão de Empreendedores (Aprovação / Validação de Selos)
-    Route::get('/empreendedores', [EmpreendedorAdminController::class, 'index'])->name('empreendedores.index');
-    Route::post('/empreendedores/{empreendedor}/aprovar', [EmpreendedorAdminController::class, 'aprovar'])->name('empreendedores.aprovar');
-    Route::post('/empreendedores/{empreendedor}/rejeitar', [EmpreendedorAdminController::class, 'rejeitar'])->name('empreendedores.rejeitar');
-    Route::post('/empreendedores/{empreendedor}/revogar-selo', [EmpreendedorAdminController::class, 'revogarSelo'])->name('empreendedores.revogar');
-
-    // CRUD de Eventos
-    Route::resource('eventos', EventoAdminController::class)->except(['show']);
 
     // Gestão ESG e Relatórios
     Route::get('/esg-indicadores', function () {
@@ -116,4 +114,41 @@ Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admi
 
     // Trilhas de Auditoria (Transparência Municipal)
     Route::get('/auditoria-logs', [AuditoriaController::class, 'index'])->name('auditoria.index');
+});
+
+// Rotas de CRUD (criação/edição/exclusão): apenas secretário e servidor
+Route::middleware(['auth', 'perfil:secretario,servidor'])->prefix('admin')->name('admin.')->group(function () {
+    // CRUD de Atrativos (exceto index que já está no grupo compartilhado)
+    Route::get('/atrativos/create', [AtrativoAdminController::class, 'create'])->name('atrativos.create');
+    Route::post('/atrativos', [AtrativoAdminController::class, 'store'])->name('atrativos.store');
+    Route::get('/atrativos/{atrativo}/edit', [AtrativoAdminController::class, 'edit'])->name('atrativos.edit');
+    Route::put('/atrativos/{atrativo}', [AtrativoAdminController::class, 'update'])->name('atrativos.update');
+    Route::delete('/atrativos/{atrativo}', [AtrativoAdminController::class, 'destroy'])->name('atrativos.destroy');
+
+    // CRUD de Eventos (exceto index)
+    Route::get('/eventos/create', [EventoAdminController::class, 'create'])->name('eventos.create');
+    Route::post('/eventos', [EventoAdminController::class, 'store'])->name('eventos.store');
+    Route::get('/eventos/{evento}/edit', [EventoAdminController::class, 'edit'])->name('eventos.edit');
+    Route::put('/eventos/{evento}', [EventoAdminController::class, 'update'])->name('eventos.update');
+    Route::delete('/eventos/{evento}', [EventoAdminController::class, 'destroy'])->name('eventos.destroy');
+
+    // Gestão de Empreendedores (Aprovação / Validação de Selos)
+    Route::post('/empreendedores/{empreendedor}/aprovar', [EmpreendedorAdminController::class, 'aprovar'])->name('empreendedores.aprovar');
+    Route::post('/empreendedores/{empreendedor}/rejeitar', [EmpreendedorAdminController::class, 'rejeitar'])->name('empreendedores.rejeitar');
+    Route::post('/empreendedores/{empreendedor}/revogar-selo', [EmpreendedorAdminController::class, 'revogarSelo'])->name('empreendedores.revogar');
+});
+
+// Rotas de aprovação: exclusivas do Prefeito
+Route::middleware(['auth', 'perfil:prefeito'])->prefix('admin/aprovacao')->name('admin.aprovacao.')->group(function () {
+    Route::get('/pendentes', [AprovacaoController::class, 'pendentes'])->name('pendentes');
+
+    // Aprovação de Atrativos
+    Route::post('/atrativos/{atrativo}/aprovar', [AprovacaoController::class, 'aprovarAtrativo'])->name('atrativos.aprovar');
+    Route::post('/atrativos/{atrativo}/rejeitar', [AprovacaoController::class, 'rejeitarAtrativo'])->name('atrativos.rejeitar');
+    Route::post('/atrativos/{atrativo}/suspender', [AprovacaoController::class, 'suspenderAtrativo'])->name('atrativos.suspender');
+
+    // Aprovação de Eventos
+    Route::post('/eventos/{evento}/aprovar', [AprovacaoController::class, 'aprovarEvento'])->name('eventos.aprovar');
+    Route::post('/eventos/{evento}/rejeitar', [AprovacaoController::class, 'rejeitarEvento'])->name('eventos.rejeitar');
+    Route::post('/eventos/{evento}/suspender', [AprovacaoController::class, 'suspenderEvento'])->name('eventos.suspender');
 });

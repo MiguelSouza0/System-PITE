@@ -18,11 +18,12 @@ class MapaController extends Controller
 
     /**
      * Retorna atrativos em JSON para alimentar os markers do Leaflet.
+     * Somente registros aprovados e ativos são exibidos.
      */
     public function atrativosJson()
     {
         $atrativos = Atrativo::with('categoria')
-            ->where('ativo', true)
+            ->visivelPortal()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->get()
@@ -49,11 +50,12 @@ class MapaController extends Controller
     /**
      * Retorna eventos em JSON para alimentar os markers do Leaflet.
      * Eventos herdam coordenadas do atrativo vinculado.
+     * Somente registros aprovados e ativos são exibidos.
      */
     public function eventosJson()
     {
         $eventos = Evento::with('atrativo.categoria')
-            ->where('ativo', true)
+            ->visivelPortal()
             ->whereHas('atrativo', function ($q) {
                 $q->whereNotNull('latitude')->whereNotNull('longitude');
             })

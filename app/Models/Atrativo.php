@@ -30,7 +30,10 @@ class Atrativo extends Model
         'niveis_acessibilidade',
         'caracteristicas_esg',
         'destaque',
-        'ativo'
+        'ativo',
+        'status_aprovacao',
+        'aprovado_por_user_id',
+        'observacoes_admin',
     ];
 
     protected $casts = [
@@ -43,6 +46,8 @@ class Atrativo extends Model
         'ativo' => 'boolean'
     ];
 
+    // --- Relacionamentos ---
+
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
@@ -51,5 +56,35 @@ class Atrativo extends Model
     public function avaliacoes()
     {
         return $this->hasMany(Avaliacao::class);
+    }
+
+    public function aprovador()
+    {
+        return $this->belongsTo(User::class, 'aprovado_por_user_id');
+    }
+
+    // --- Scopes de Status de Aprovação ---
+
+    /**
+     * Somente registros aprovados e ativos — visíveis no portal público, mapa e turista.
+     */
+    public function scopeVisivelPortal($query)
+    {
+        return $query->where('status_aprovacao', 'aprovado')->where('ativo', true);
+    }
+
+    public function scopeAprovado($query)
+    {
+        return $query->where('status_aprovacao', 'aprovado');
+    }
+
+    public function scopePendente($query)
+    {
+        return $query->where('status_aprovacao', 'pendente');
+    }
+
+    public function scopeSuspenso($query)
+    {
+        return $query->where('status_aprovacao', 'suspenso');
     }
 }

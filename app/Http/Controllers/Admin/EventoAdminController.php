@@ -20,11 +20,20 @@ class EventoAdminController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('ativo', $request->status === 'ativo');
+            $query->where('status_aprovacao', $request->status);
         }
 
         $eventos = $query->latest()->paginate(15);
-        return view('admin.eventos.index', compact('eventos'));
+
+        // Contadores por status de aprovação
+        $contadores = [
+            'total'      => Evento::count(),
+            'pendentes'  => Evento::pendente()->count(),
+            'aprovados'  => Evento::aprovado()->count(),
+            'suspensos'  => Evento::suspenso()->count(),
+        ];
+
+        return view('admin.eventos.index', compact('eventos', 'contadores'));
     }
 
     public function create()
@@ -48,7 +57,10 @@ class EventoAdminController extends Controller
 
         $validated['slug'] = Str::slug($validated['titulo']);
         $validated['gratuito'] = $request->boolean('gratuito');
-        $validated['ativo'] = true;
+
+        // Novo cadastro entra como PENDENTE — aguardando aprovação do Prefeito
+        $validated['status_aprovacao'] = 'pendente';
+        $validated['ativo'] = false; // Não visível no portal até aprovação
 
         // Evitar slug duplicado
         $count = Evento::where('slug', $validated['slug'])->count();
@@ -62,7 +74,7 @@ class EventoAdminController extends Controller
 
         return redirect()
             ->route('admin.eventos.index')
-            ->with('sucesso', 'Evento "' . $evento->titulo . '" criado com sucesso!');
+            ->with('sucesso', 'Evento "' . $evento->titulo . '" criado com sucesso! Aguardando aprovação do Prefeito.');
     }
 
     public function edit(Evento $evento)
@@ -88,15 +100,26 @@ class EventoAdminController extends Controller
 
         $validated['slug'] = Str::slug($validated['titulo']);
         $validated['gratuito'] = $request->boolean('gratuito');
-        $validated['ativo'] = $request->boolean('ativo');
+
+        // Se o registro estava suspenso, ao ser editado pelo Técnico volta para 'pendente'
+        if ($evento->status_aprovacao === 'suspenso') {
+            $validated['status_aprovacao'] = 'pendente';
+            // Mantém ativo = false até aprovação
+        } else {
+            $validated['ativo'] = $request->boolean('ativo');
+        }
 
         $evento->update($validated);
 
         Auditoria::registrar('editou', 'eventos', $evento->id, $antes, $evento->fresh()->toArray());
 
+        $mensagem = $evento->status_aprovacao === 'pendente'
+            ? 'Evento "' . $evento->titulo . '" atualizado! Aguardando nova aprovação do Prefeito.'
+            : 'Evento "' . $evento->titulo . '" atualizado!';
+
         return redirect()
             ->route('admin.eventos.index')
-            ->with('sucesso', 'Evento "' . $evento->titulo . '" atualizado!');
+            ->with('sucesso', $mensagem);
     }
 
     public function destroy(Evento $evento)
