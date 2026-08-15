@@ -140,10 +140,10 @@ class DashboardController extends Controller
             'analiseSentimentoIa'
         );
 
-        if ($user && $user->isPrefeito()) {
+        if ($user && ($user->isPrefeito() || $user->isSecretario())) {
             return view('admin.dashboard.prefeito', $viewData);
         }
 
-        return view('admin.dashboard.secretaria', $viewData);
+        return view('admin.dashboard.servidor', $viewData);
     }
 }

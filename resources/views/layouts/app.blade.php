@@ -558,7 +558,7 @@
                                         <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(13,148,136,0.15); color: #0d9488; font-weight: 700;">Secretaria</span>
                                     </div>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 260px;">
                                     <li class="px-3 py-2 border-bottom mb-2">
                                         <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
                                         <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-briefcase me-1" style="color: #0d9488;"></i> Secretaria de Turismo</div>
@@ -569,33 +569,46 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center" href="{{ route('admin.aprovacao.pendentes') }}">
+                                            <i class="bi bi-clipboard-check me-2" style="color: var(--pite-gold-warm);"></i> Aprovações Pendentes
+                                            @php
+                                                $totalPendentesSecretario = \App\Models\Atrativo::pendente()->count() + \App\Models\Evento::pendente()->count();
+                                            @endphp
+                                            @if($totalPendentesSecretario > 0)
+                                                <span class="badge rounded-pill ms-auto" style="background: rgba(245,158,11,0.15); color: #d97706; font-size: 0.7rem;">{{ $totalPendentesSecretario }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.index') }}">
-                                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--pite-emerald);"></i> Gestão de Atrativos
+                                            <i class="bi bi-geo-alt me-2" style="color: var(--pite-sky);"></i> Consultar Atrativos
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.eventos.index') }}">
-                                            <i class="bi bi-calendar-event-fill me-2" style="color: var(--pite-sky);"></i> Gestão de Eventos
+                                            <i class="bi bi-calendar-event me-2" style="color: var(--pite-violet);"></i> Consultar Eventos
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.empreendedores.index') }}">
-                                            <i class="bi bi-shop me-2" style="color: var(--pite-gold-warm);"></i> Validar Empreendedores
+                                            <i class="bi bi-shop me-2" style="color: var(--pite-gold-warm);"></i> Consultar Empreendedores
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.esg.index') }}">
-                                            <i class="bi bi-leaf-fill me-2" style="color: var(--pite-emerald);"></i> Gestão ESG Municipal
-                                        </a>
-                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.auditoria.index') }}">
-                                            <i class="bi bi-shield-check me-2" style="color: var(--pite-violet);"></i> Auditoria de Operações
+                                            <i class="bi bi-shield-check me-2" style="color: var(--pite-violet);"></i> Trilha de Auditoria
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.relatorios.csv') }}">
-                                            <i class="bi bi-download me-2 text-secondary"></i> Exportar Dados (CSV)
+                                            <i class="bi bi-file-earmark-spreadsheet me-2" style="color: var(--pite-emerald);"></i> Exportar Relatório CSV
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.relatorios.esg-pdf') }}">
+                                            <i class="bi bi-file-earmark-pdf me-2" style="color: var(--pite-coral);"></i> Relatório ESG (PDF)
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider my-2"></li>

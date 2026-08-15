@@ -61,7 +61,12 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <span class="badge px-3 py-2 mb-2" style="background:rgba(245,158,11,0.2); color:#fbbf24;">
-                    <i class="bi bi-bank2 me-1"></i> Painel de Políticas Públicas e Tomada de Decisão
+                    <i class="bi bi-bank2 me-1"></i>
+                    @if(auth()->user()->isSecretario())
+                        Secretaria Municipal de Turismo — Gestão Estratégica
+                    @else
+                        Gabinete do Executivo — Tomada de Decisão & Políticas Públicas
+                    @endif
                 </span>
                 <h2 class="fw-bold mb-0" style="font-family:'Outfit';">Inteligência Estratégica do Turismo</h2>
                 <p class="mb-0 small" style="opacity:0.8;">Evidências de fluxo, sazonalidade, perfil do turista e impacto econômico municipal</p>
@@ -331,7 +336,7 @@
                     <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
                         <i class="bi bi-clock-history text-primary me-2"></i>Últimos Atrativos Cadastrados
                     </h6>
-                    <a href="{{ route('admin.atrativos.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Gerenciar Todos</a>
+                    <a href="{{ route('admin.atrativos.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Consultar Todos</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-admin align-middle mb-0">
@@ -349,9 +354,15 @@
                                 <td class="fw-semibold">{{ $at->nome }}</td>
                                 <td><span class="badge bg-light text-dark">{{ $at->categoria->nome ?? '—' }}</span></td>
                                 <td>
-                                    <span class="badge badge-status-{{ $at->ativo ? 'aprovado' : 'pendente' }} px-2 py-1 rounded-pill">
-                                        {{ $at->ativo ? 'Ativo' : 'Inativo' }}
-                                    </span>
+                                    @if($at->status_aprovacao === 'aprovado')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(4,120,87,0.12); color:#047857;">Aprovado</span>
+                                    @elseif($at->status_aprovacao === 'pendente')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(245,158,11,0.15); color:#d97706;">Pendente</span>
+                                    @elseif($at->status_aprovacao === 'suspenso')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(99,102,241,0.15); color:#6366f1;">Suspenso</span>
+                                    @else
+                                        <span class="badge bg-light text-dark px-2 py-1 rounded-pill">{{ $at->status_aprovacao ?? 'Ativo' }}</span>
+                                    @endif
                                 </td>
                                 <td class="text-muted small">{{ $at->created_at->format('d/m/Y') }}</td>
                             </tr>
@@ -395,30 +406,30 @@
         </div>
     </div>
 
-    {{-- AÇÕES RÁPIDAS --}}
+    {{-- AÇÕES RÁPIDAS (SUPERVISÃO) --}}
     <div class="row g-4">
         <div class="col-12">
             <div class="chart-card">
                 <h6 class="fw-bold mb-3" style="font-family:'Outfit';">
-                    <i class="bi bi-lightning-charge text-warning me-2"></i>Ações Rápidas de Gestão
+                    <i class="bi bi-lightning-charge text-warning me-2"></i>Ações Rápidas — Supervisão e Consulta
                 </h6>
                 <div class="row g-3">
+                    <div class="col-md-2">
+                        <a href="{{ route('admin.aprovacao.pendentes') }}" class="btn btn-outline-warning w-100 rounded-3 py-3 position-relative">
+                            <i class="bi bi-clipboard-check d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Aprovações</small>
+                            @php
+                                $totalPend = \App\Models\Atrativo::pendente()->count() + \App\Models\Evento::pendente()->count();
+                            @endphp
+                            @if($totalPend > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">{{ $totalPend }}</span>
+                            @endif
+                        </a>
+                    </div>
                     <div class="col-md-2">
                         <a href="{{ route('admin.atrativos.index') }}" class="btn btn-outline-success w-100 rounded-3 py-3">
                             <i class="bi bi-compass d-block fs-4 mb-1"></i>
                             <small class="fw-semibold">Atrativos</small>
-                        </a>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('admin.atrativos.create') }}" class="btn btn-outline-success w-100 rounded-3 py-3">
-                            <i class="bi bi-plus-lg d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Novo Atrativo</small>
-                        </a>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('admin.empreendedores.index') }}" class="btn btn-outline-warning w-100 rounded-3 py-3">
-                            <i class="bi bi-shop d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Empreendedores</small>
                         </a>
                     </div>
                     <div class="col-md-2">
@@ -428,15 +439,21 @@
                         </a>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.esg.index') }}" class="btn btn-outline-primary w-100 rounded-3 py-3">
-                            <i class="bi bi-leaf d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Indicadores ESG</small>
+                        <a href="{{ route('admin.empreendedores.index') }}" class="btn btn-outline-primary w-100 rounded-3 py-3">
+                            <i class="bi bi-shop d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Empreendedores</small>
                         </a>
                     </div>
                     <div class="col-md-2">
                         <a href="{{ route('admin.auditoria.index') }}" class="btn btn-outline-dark w-100 rounded-3 py-3">
                             <i class="bi bi-shield-check d-block fs-4 mb-1"></i>
                             <small class="fw-semibold">Auditoria</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{{ route('admin.relatorios.csv') }}" class="btn btn-outline-secondary w-100 rounded-3 py-3">
+                            <i class="bi bi-download d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Relatórios</small>
                         </a>
                     </div>
                 </div>
