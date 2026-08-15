@@ -153,6 +153,114 @@
             color: var(--pite-emerald);
         }
 
+        /* ── Profile Dropdowns & Responsive Behavior ── */
+        .navbar-pite .dropdown-toggle::after {
+            vertical-align: 0.15em;
+            transition: transform 0.25s ease;
+        }
+        .navbar-pite .dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .navbar-pite .dropdown-menu {
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14) !important;
+            border-radius: 16px !important;
+            animation: fadeInDownMenu 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1060;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.98);
+            margin-top: 10px !important;
+        }
+
+        @keyframes fadeInDownMenu {
+            from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .navbar-pite .dropdown-item {
+            font-size: 0.86rem;
+            font-weight: 500;
+            padding: 9px 14px;
+            border-radius: 10px;
+            transition: var(--pite-transition);
+            display: flex;
+            align-items: center;
+            white-space: normal;
+        }
+
+        .navbar-pite .dropdown-item:hover,
+        .navbar-pite .dropdown-item:focus {
+            background: rgba(4, 120, 87, 0.08);
+            color: var(--pite-emerald);
+            transform: translateX(4px);
+        }
+
+        .navbar-pite .dropdown-item.text-danger:hover,
+        .navbar-pite .dropdown-item.text-danger:focus {
+            background: rgba(244, 63, 94, 0.08);
+            color: #e11d48 !important;
+            transform: translateX(4px);
+        }
+
+        /* Responsividade para Telas Menores (Celulares e Tablets) */
+        @media (max-width: 991.98px) {
+            .navbar-pite .navbar-collapse {
+                background: #ffffff;
+                border-radius: var(--pite-radius-sm);
+                padding: 16px;
+                margin-top: 12px;
+                box-shadow: var(--pite-shadow-lg);
+                border: 1px solid rgba(0, 0, 0, 0.06);
+            }
+            .navbar-pite .nav-link {
+                padding: 10px 14px;
+                border-radius: 8px;
+            }
+        }
+
+        /* Telas Mobile Extra Pequenas & Médias (< 576px) */
+        @media (max-width: 575.98px) {
+            .navbar-pite .dropdown-menu {
+                position: fixed !important;
+                top: 70px !important;
+                right: 12px !important;
+                left: 12px !important;
+                width: auto !important;
+                min-width: unset !important;
+                max-width: none !important;
+                max-height: calc(100vh - 90px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                transform: none !important;
+            }
+            .navbar-pite .dropdown-toggle {
+                padding: 4px 8px 4px 4px !important;
+            }
+            .navbar-pite .dropdown-toggle .badge {
+                font-size: 0.6rem !important;
+            }
+            .brand-logo {
+                font-size: 1.15rem;
+            }
+            .brand-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Telas Tablets e Desktops (>= 576px) */
+        @media (min-width: 576px) {
+            .navbar-pite .dropdown-menu {
+                min-width: 270px;
+                max-width: 320px;
+                right: 0 !important;
+                left: auto !important;
+            }
+        }
+
         /* ── Reusable Components ── */
         .section-title {
             font-family: 'Outfit', sans-serif;
@@ -344,79 +452,395 @@
 
     <!-- Navegação -->
     <nav class="navbar navbar-expand-lg navbar-pite sticky-top" id="mainNav">
-        <div class="container">
+        <div class="container d-flex align-items-center justify-content-between">
             <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ route('portal.home') }}">
                 <div class="brand-icon"><i class="bi bi-compass"></i></div>
                 <span class="brand-logo">System-PITE</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarMain">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.home') }}">Início</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.atrativos.index') }}">Atrativos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.eventos.index') }}">Eventos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.mapa') }}">Mapa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.roteiros') }}"><i class="bi bi-stars me-1"></i>Roteiros IA</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('portal.esg') }}">ESG</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-2">
+
+            <!-- Ações do Topo: Perfil & Botão Hamburger (Responsivo para Celulares e Desktops) -->
+            <div class="d-flex align-items-center gap-2 order-lg-3">
                     @auth
-                        @if(auth()->user()->isTurista())
-                            {{-- Dropdown do Turista Logado --}}
+                        @php
+                            $currentUser = auth()->user();
+                            $initial = strtoupper(substr($currentUser->name, 0, 1));
+                            $firstName = explode(' ', $currentUser->name)[0];
+                        @endphp
+
+                        @if($currentUser->isPrefeito())
+                            {{-- Dropdown do Prefeito Municipal --}}
                             <div class="dropdown">
-                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle" type="button" id="turistaDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(4,120,87,0.06); border-radius: 14px; padding: 6px 16px 6px 6px; border: 1.5px solid rgba(4,120,87,0.15);">
-                                    <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, var(--pite-gold), var(--pite-gold-warm)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.8rem; font-family: 'Outfit';">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="prefeitoDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(4,120,87,0.08); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(4,120,87,0.2) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #064e3b, #047857); display: flex; align-items: center; justify-content: center; color: #fef08a; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(4,120,87,0.3); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #f59e0b; border: 2px solid #fff; border-radius: 50%;"></span>
                                     </div>
-                                    <span class="fw-semibold small d-none d-md-inline" style="color: var(--pite-text);">{{ explode(' ', auth()->user()->name)[0] }}</span>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(4,120,87,0.15); color: #047857; font-weight: 700;">Prefeito</span>
+                                    </div>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 220px;">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-bank me-1 text-success"></i> Gabinete do Executivo</div>
+                                    </li>
                                     <li>
-                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.dashboard') }}">
-                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-emerald);"></i> Meu Painel
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.dashboard') }}">
+                                            <i class="bi bi-speedometer2 me-2" style="color: var(--pite-emerald);"></i> Painel Executivo
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.favoritos') }}">
-                                            <i class="bi bi-heart me-2" style="color: var(--pite-coral);"></i> Favoritos
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.esg.index') }}">
+                                            <i class="bi bi-graph-up-arrow me-2" style="color: var(--pite-teal);"></i> Indicadores ESG & Metas
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.historico') }}">
-                                            <i class="bi bi-clock-history me-2" style="color: var(--pite-sky);"></i> Histórico
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.auditoria.index') }}">
+                                            <i class="bi bi-shield-check me-2" style="color: var(--pite-sky);"></i> Trilhas de Auditoria
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.perfil') }}">
-                                            <i class="bi bi-person-gear me-2" style="color: var(--pite-violet);"></i> Editar Perfil
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.index') }}">
+                                            <i class="bi bi-geo-alt me-2" style="color: var(--pite-gold-warm);"></i> Consultar Atrativos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.relatorios.csv') }}">
+                                            <i class="bi bi-file-earmark-spreadsheet me-2" style="color: var(--pite-emerald);"></i> Exportar Relatório CSV
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.relatorios.esg-pdf') }}">
+                                            <i class="bi bi-file-earmark-pdf me-2" style="color: var(--pite-coral);"></i> Exportar Relatório ESG (PDF)
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider my-2"></li>
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
-                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger">
-                                                <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
                                             </button>
                                         </form>
                                     </li>
                                 </ul>
                             </div>
-                        @elseif(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-nav-primary"><i class="bi bi-grid-1x2 me-1"></i> Gestão</a>
-                        @elseif(auth()->user()->isEmpreendedor())
-                            <a href="{{ route('empreendedor.dashboard') }}" class="btn btn-nav-outline"><i class="bi bi-shop me-1"></i> Empreendedor</a>
+
+                        @elseif($currentUser->isSecretario())
+                            {{-- Dropdown do Secretário de Turismo --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="secretarioDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(13,148,136,0.08); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(13,148,136,0.2) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #0d9488, #059669); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(13,148,136,0.3); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #10b981; border: 2px solid #fff; border-radius: 50%;"></span>
+                                    </div>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(13,148,136,0.15); color: #0d9488; font-weight: 700;">Secretaria</span>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-briefcase me-1" style="color: #0d9488;"></i> Secretaria de Turismo</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-emerald);"></i> Painel da Secretaria
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.index') }}">
+                                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--pite-emerald);"></i> Gestão de Atrativos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.eventos.index') }}">
+                                            <i class="bi bi-calendar-event-fill me-2" style="color: var(--pite-sky);"></i> Gestão de Eventos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.empreendedores.index') }}">
+                                            <i class="bi bi-shop me-2" style="color: var(--pite-gold-warm);"></i> Validar Empreendedores
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.esg.index') }}">
+                                            <i class="bi bi-leaf-fill me-2" style="color: var(--pite-emerald);"></i> Gestão ESG Municipal
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.auditoria.index') }}">
+                                            <i class="bi bi-shield-check me-2" style="color: var(--pite-violet);"></i> Auditoria de Operações
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.relatorios.csv') }}">
+                                            <i class="bi bi-download me-2 text-secondary"></i> Exportar Dados (CSV)
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        @elseif($currentUser->isServidor())
+                            {{-- Dropdown do Servidor Técnico --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="servidorDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(14,165,233,0.08); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(14,165,233,0.2) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #2563eb); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(14,165,233,0.3); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #38bdf8; border: 2px solid #fff; border-radius: 50%;"></span>
+                                    </div>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(14,165,233,0.15); color: #0284c7; font-weight: 700;">Técnico</span>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-person-gear me-1 text-primary"></i> Servidor Técnico / Operacional</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.dashboard') }}">
+                                            <i class="bi bi-speedometer me-2" style="color: var(--pite-sky);"></i> Painel Operacional
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.index') }}">
+                                            <i class="bi bi-geo-alt me-2" style="color: var(--pite-emerald);"></i> Gerenciar Atrativos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.create') }}">
+                                            <i class="bi bi-plus-circle me-2" style="color: var(--pite-emerald);"></i> Cadastrar Novo Atrativo
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.eventos.index') }}">
+                                            <i class="bi bi-calendar-event me-2" style="color: var(--pite-violet);"></i> Gerenciar Eventos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.eventos.create') }}">
+                                            <i class="bi bi-calendar-plus me-2" style="color: var(--pite-violet);"></i> Cadastrar Novo Evento
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.empreendedores.index') }}">
+                                            <i class="bi bi-shop me-2" style="color: var(--pite-gold-warm);"></i> Empreendedores
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.auditoria.index') }}">
+                                            <i class="bi bi-clock-history me-2 text-secondary"></i> Logs de Auditoria
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        @elseif($currentUser->isEmpreendedor())
+                            {{-- Dropdown do Empreendedor Local --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="empreendedorDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(245,158,11,0.08); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(245,158,11,0.2) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(245,158,11,0.3); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #22c55e; border: 2px solid #fff; border-radius: 50%;"></span>
+                                    </div>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(245,158,11,0.15); color: #d97706; font-weight: 700;">Empreendedor</span>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-shop me-1 text-warning"></i> Espaço do Empreendedor</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('empreendedor.dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-gold-warm);"></i> Meu Estabelecimento
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('empreendedor.cadastro') }}">
+                                            <i class="bi bi-plus-circle me-2" style="color: var(--pite-emerald);"></i> Cadastrar Estabelecimento
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('portal.atrativos.index') }}">
+                                            <i class="bi bi-eye me-2" style="color: var(--pite-sky);"></i> Ver Atrativos no Portal
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair do Painel
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        @elseif($currentUser->isTurista())
+                            {{-- Dropdown do Turista Logado --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="turistaDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(4,120,87,0.06); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(4,120,87,0.15) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--pite-gold), var(--pite-coral)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(245,158,11,0.25); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #10b981; border: 2px solid #fff; border-radius: 50%;"></span>
+                                    </div>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(244,63,94,0.12); color: #f43f5e; font-weight: 700;">Turista</span>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-person-check me-1 text-danger"></i> Turista / Cidadão</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-emerald);"></i> Meu Painel de Viagens
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.favoritos') }}">
+                                            <i class="bi bi-heart-fill me-2" style="color: var(--pite-coral);"></i> Meus Favoritos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.historico') }}">
+                                            <i class="bi bi-clock-history me-2" style="color: var(--pite-sky);"></i> Histórico de Visitas
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.recomendacoes') }}">
+                                            <i class="bi bi-stars me-2" style="color: var(--pite-gold-warm);"></i> Recomendações IA
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.perfil') }}">
+                                            <i class="bi bi-person-gear me-2" style="color: var(--pite-violet);"></i> Editar Perfil & Preferências
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair da Conta
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        @else
+                            {{-- Fallback para Administrador Geral --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle border-0" type="button" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(124,58,237,0.08); border-radius: 14px; padding: 6px 14px 6px 6px; border: 1.5px solid rgba(124,58,237,0.2) !important;">
+                                    <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; box-shadow: 0 2px 8px rgba(124,58,237,0.3); position: relative;">
+                                        {{ $initial }}
+                                        <span style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #8b5cf6; border: 2px solid #fff; border-radius: 50%;"></span>
+                                    </div>
+                                    <div class="text-start d-none d-md-block" style="line-height: 1.2;">
+                                        <span class="fw-bold small d-block" style="color: var(--pite-text);">{{ $firstName }}</span>
+                                        <span class="badge px-1 py-0 text-uppercase" style="font-size: 0.65rem; background: rgba(124,58,237,0.15); color: #7c3aed; font-weight: 700;">Gestão</span>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 250px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold small text-dark">{{ $currentUser->name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-shield-lock me-1 text-primary"></i> Painel de Administração</div>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-emerald);"></i> Painel de Gestão
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.atrativos.index') }}">
+                                            <i class="bi bi-geo-alt me-2" style="color: var(--pite-emerald);"></i> Atrativos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.eventos.index') }}">
+                                            <i class="bi bi-calendar-event me-2" style="color: var(--pite-sky);"></i> Eventos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.empreendedores.index') }}">
+                                            <i class="bi bi-shop me-2" style="color: var(--pite-gold-warm);"></i> Empreendedores
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.esg.index') }}">
+                                            <i class="bi bi-leaf me-2" style="color: var(--pite-emerald);"></i> Indicadores ESG
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('admin.auditoria.index') }}">
+                                            <i class="bi bi-clock-history me-2 text-secondary"></i> Auditoria
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-semibold">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         @endif
                     @else
-                        <a href="{{ route('turista.login') }}" class="btn btn-nav-outline"><i class="bi bi-person me-1"></i> Entrar</a>
-                        <a href="{{ route('turista.registro') }}" class="btn btn-nav-primary"><i class="bi bi-person-plus me-1"></i> Cadastre-se</a>
+                        <a href="{{ route('turista.login') }}" class="btn btn-nav-outline py-1 px-3"><i class="bi bi-person me-1"></i> Entrar</a>
+                        <a href="{{ route('turista.registro') }}" class="btn btn-nav-primary d-none d-sm-inline-flex py-1 px-3"><i class="bi bi-person-plus me-1"></i> Cadastre-se</a>
                     @endauth
+
+                    <!-- Botão Hamburger para Telas Mobile/Tablet -->
+                    <button class="navbar-toggler border-0 p-2 ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <!-- Menu de Links Colapsável (Centralizado no Desktop, Menu Dropdown no Mobile) -->
+                <div class="collapse navbar-collapse order-lg-2" id="navbarMain">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 py-2 py-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.home') }}">Início</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.atrativos.index') }}">Atrativos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.eventos.index') }}">Eventos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.mapa') }}">Mapa</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.roteiros') }}"><i class="bi bi-stars me-1"></i>Roteiros IA</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('portal.esg') }}">ESG</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
     <main>@yield('content')</main>
 

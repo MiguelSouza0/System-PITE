@@ -80,6 +80,11 @@ class User extends Authenticatable
         return $this->perfil && $this->perfil->slug === 'secretario';
     }
 
+    public function isServidor()
+    {
+        return $this->perfil && in_array($this->perfil->slug, ['servidor', 'tecnico']);
+    }
+
     public function isAdmin()
     {
         return $this->perfil && in_array($this->perfil->slug, ['admin', 'prefeito', 'secretario', 'servidor']);
