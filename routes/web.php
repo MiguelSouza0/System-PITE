@@ -116,8 +116,8 @@ Route::middleware(['auth', 'perfil:prefeito,secretario,servidor'])->prefix('admi
     Route::get('/auditoria-logs', [AuditoriaController::class, 'index'])->name('auditoria.index');
 });
 
-// Rotas de CRUD (criação/edição/exclusão): apenas secretário e servidor
-Route::middleware(['auth', 'perfil:secretario,servidor'])->prefix('admin')->name('admin.')->group(function () {
+// Rotas de CRUD (criação/edição/exclusão): apenas servidor/técnico
+Route::middleware(['auth', 'perfil:servidor'])->prefix('admin')->name('admin.')->group(function () {
     // CRUD de Atrativos (exceto index que já está no grupo compartilhado)
     Route::get('/atrativos/create', [AtrativoAdminController::class, 'create'])->name('atrativos.create');
     Route::post('/atrativos', [AtrativoAdminController::class, 'store'])->name('atrativos.store');
@@ -138,8 +138,8 @@ Route::middleware(['auth', 'perfil:secretario,servidor'])->prefix('admin')->name
     Route::post('/empreendedores/{empreendedor}/revogar-selo', [EmpreendedorAdminController::class, 'revogarSelo'])->name('empreendedores.revogar');
 });
 
-// Rotas de aprovação: exclusivas do Prefeito
-Route::middleware(['auth', 'perfil:prefeito'])->prefix('admin/aprovacao')->name('admin.aprovacao.')->group(function () {
+// Rotas de aprovação: Prefeito e Secretário
+Route::middleware(['auth', 'perfil:prefeito,secretario'])->prefix('admin/aprovacao')->name('admin.aprovacao.')->group(function () {
     Route::get('/pendentes', [AprovacaoController::class, 'pendentes'])->name('pendentes');
 
     // Aprovação de Atrativos

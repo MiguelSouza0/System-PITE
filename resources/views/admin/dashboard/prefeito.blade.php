@@ -252,7 +252,7 @@
                     <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
                         <i class="bi bi-clock-history text-primary me-2"></i>Últimos Atrativos Cadastrados
                     </h6>
-                    <a href="{{ route('admin.atrativos.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Gerenciar Todos</a>
+                    <a href="{{ route('admin.atrativos.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Consultar Todos</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-admin align-middle mb-0">
@@ -316,30 +316,30 @@
         </div>
     </div>
 
-    {{-- AÇÕES RÁPIDAS --}}
+    {{-- AÇÕES RÁPIDAS (SUPERVISÃO) --}}
     <div class="row g-4">
         <div class="col-12">
             <div class="chart-card">
                 <h6 class="fw-bold mb-3" style="font-family:'Outfit';">
-                    <i class="bi bi-lightning-charge text-warning me-2"></i>Ações Rápidas de Gestão
+                    <i class="bi bi-lightning-charge text-warning me-2"></i>Ações Rápidas — Supervisão e Consulta
                 </h6>
                 <div class="row g-3">
+                    <div class="col-md-2">
+                        <a href="{{ route('admin.aprovacao.pendentes') }}" class="btn btn-outline-warning w-100 rounded-3 py-3 position-relative">
+                            <i class="bi bi-clipboard-check d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Aprovações</small>
+                            @php
+                                $totalPend = \App\Models\Atrativo::pendente()->count() + \App\Models\Evento::pendente()->count();
+                            @endphp
+                            @if($totalPend > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">{{ $totalPend }}</span>
+                            @endif
+                        </a>
+                    </div>
                     <div class="col-md-2">
                         <a href="{{ route('admin.atrativos.index') }}" class="btn btn-outline-success w-100 rounded-3 py-3">
                             <i class="bi bi-compass d-block fs-4 mb-1"></i>
                             <small class="fw-semibold">Atrativos</small>
-                        </a>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('admin.atrativos.create') }}" class="btn btn-outline-success w-100 rounded-3 py-3">
-                            <i class="bi bi-plus-lg d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Novo Atrativo</small>
-                        </a>
-                    </div>
-                    <div class="col-md-2">
-                        <a href="{{ route('admin.empreendedores.index') }}" class="btn btn-outline-warning w-100 rounded-3 py-3">
-                            <i class="bi bi-shop d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Empreendedores</small>
                         </a>
                     </div>
                     <div class="col-md-2">
@@ -349,15 +349,21 @@
                         </a>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.esg.index') }}" class="btn btn-outline-primary w-100 rounded-3 py-3">
-                            <i class="bi bi-leaf d-block fs-4 mb-1"></i>
-                            <small class="fw-semibold">Indicadores ESG</small>
+                        <a href="{{ route('admin.empreendedores.index') }}" class="btn btn-outline-primary w-100 rounded-3 py-3">
+                            <i class="bi bi-shop d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Empreendedores</small>
                         </a>
                     </div>
                     <div class="col-md-2">
                         <a href="{{ route('admin.auditoria.index') }}" class="btn btn-outline-dark w-100 rounded-3 py-3">
                             <i class="bi bi-shield-check d-block fs-4 mb-1"></i>
                             <small class="fw-semibold">Auditoria</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{{ route('admin.relatorios.csv') }}" class="btn btn-outline-secondary w-100 rounded-3 py-3">
+                            <i class="bi bi-download d-block fs-4 mb-1"></i>
+                            <small class="fw-semibold">Relatórios</small>
                         </a>
                     </div>
                 </div>
