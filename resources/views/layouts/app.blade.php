@@ -772,6 +772,11 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.planos') }}">
+                                            <i class="bi bi-map-fill me-2" style="color: var(--pite-violet);"></i> Meus Planos IA
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.perfil') }}">
                                             <i class="bi bi-person-gear me-2" style="color: var(--pite-violet);"></i> Editar Perfil & Preferências
                                         </a>
@@ -954,6 +959,9 @@
                             <option value="en" class="text-dark">🇺🇸 EN</option>
                             <option value="es" class="text-dark">🇪🇸 ES</option>
                         </select>
+                        <button type="button" class="btn btn-sm btn-light border-0 rounded-circle" id="btnClearChatHistory" title="Limpar Histórico de Mensagens" style="width:32px; height:32px; padding:0; background:rgba(255,255,255,0.15); color:#fff;">
+                            <i class="bi bi-trash"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-light rounded-circle" data-bs-dismiss="modal" style="width:32px; height:32px; padding:0;">
                             <i class="bi bi-x-lg"></i>
                         </button>
@@ -969,9 +977,15 @@
                         </div>
                         <div class="p-3 bg-white rounded-4 shadow-sm border" style="max-width:85%;">
                             <p class="small text-dark mb-1" id="chatWelcomeText" style="line-height:1.5;">
-                                Olá! Sou o <strong>Guia Virtual Oficial do System-PITE</strong>. Como posso ajudar seu passeio no município hoje?
+                                Olá! Sou o <strong>Guia Virtual Oficial do System-PITE</strong>. Como posso ajudar seu passeio no município hoje? Posso criar e editar roteiros de viagem personalizados para você!
                             </p>
                             <div class="d-flex flex-wrap gap-1 mt-2">
+                                <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="Crie um roteiro de 3 dias em João Pessoa para mim">
+                                    🗺️ Roteiro 3 Dias
+                                </button>
+                                <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="Quais os melhores locais para visitar em João Pessoa?">
+                                    🌟 Recomendados para mim
+                                </button>
                                 <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="O que fazer hoje com crianças?">
                                     👨‍👩‍👧 Passeios em Família
                                 </button>
@@ -981,12 +995,6 @@
                                 <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="Onde comer comida típica regional?">
                                     🍽️ Gastronomia Local
                                 </button>
-                                <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="Quais atrativos são 100% acessíveis para cadeirantes?">
-                                    ♿ Acessibilidade PNE
-                                </button>
-                                <button class="btn btn-sm btn-light border rounded-pill px-2 py-1 quick-ask-btn" style="font-size:0.72rem;" data-msg="Quais são os telefones de emergência da cidade?">
-                                    🚨 Socorro & Emergência
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -995,7 +1003,7 @@
                 <!-- Rodapé com Input -->
                 <div class="p-3 bg-white border-top">
                     <form id="chatForm" class="d-flex gap-2">
-                        <input type="text" id="chatInput" class="form-control form-control-pite rounded-pill small" placeholder="Pergunte sobre atrativos, eventos, restaurantes..." maxlength="400" required>
+                        <input type="text" id="chatInput" class="form-control form-control-pite rounded-pill small" placeholder="Pergunte sobre atrativos, crie um plano de viagem..." maxlength="400" required>
                         <button type="submit" class="btn btn-pite rounded-circle flex-shrink-0" style="width:42px; height:42px; padding:0;" id="btnSendChat">
                             <i class="bi bi-send-fill"></i>
                         </button>
@@ -1082,7 +1090,7 @@
         });
 
         // ═══════════════════════════════════════════
-        // GUIA PITE IA — ASSISTENTE VIRTUAL INTELIGENTE
+        // GUIA PITE IA — ASSISTENTE VIRTUAL INTELIGENTE (COM PERSISTÊNCIA E PLANOS)
         // ═══════════════════════════════════════════
         const chatModalEl = document.getElementById('modalAiChat');
         const btnOpenChat = document.getElementById('btnOpenAiChat');
@@ -1091,13 +1099,81 @@
         const messagesBox = document.getElementById('chatMessagesContainer');
         const langSelect = document.getElementById('chatLanguageSelect');
         const btnVoiceLast = document.getElementById('btnVoiceReadLast');
+        const btnClearHistory = document.getElementById('btnClearChatHistory');
 
+        // Identificador persistente da sessão no navegador
+        let aiSessaoId = localStorage.getItem('pite_ai_sessao_id');
+        if (!aiSessaoId) {
+            aiSessaoId = 'sessao_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+            localStorage.setItem('pite_ai_sessao_id', aiSessaoId);
+        }
+
+        let historyLoaded = false;
         let lastBotResponse = "Bem-vindo ao System-PITE. Como posso ajudar com sua viagem?";
+
+        function carregarHistoricoServidor() {
+            if (historyLoaded) return;
+
+            fetch(`{{ route("api.ia.historico") }}?sessao_id=${encodeURIComponent(aiSessaoId)}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.sucesso && res.mensagens && res.mensagens.length > 0) {
+                    res.mensagens.forEach(msg => {
+                        if (msg.remetente === 'user') {
+                            appendUserMessage(msg.mensagem);
+                        } else {
+                            const dados = {
+                                resposta: msg.mensagem,
+                                cards: msg.dados_extras?.cards || [],
+                                sugestoes: msg.dados_extras?.sugestoes || [],
+                                dados_extras: msg.dados_extras?.dados_extras || null,
+                                fonte_dados: 'Base Oficial Persistida'
+                            };
+                            appendBotMessage(dados);
+                            lastBotResponse = msg.mensagem;
+                        }
+                    });
+                }
+                historyLoaded = true;
+            })
+            .catch(err => console.error("Erro ao carregar histórico da IA:", err));
+        }
 
         btnOpenChat?.addEventListener('click', () => {
             const modal = bootstrap.Modal.getOrCreateInstance(chatModalEl);
             modal.show();
+            carregarHistoricoServidor();
             setTimeout(() => chatInput?.focus(), 300);
+        });
+
+        btnClearHistory?.addEventListener('click', () => {
+            confirmarAcao("Deseja realmente apagar o histórico de conversa com o Guia IA?", () => {
+                fetch('{{ route("api.ia.limpar-historico") }}', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ sessao_id: aiSessaoId })
+                })
+                .then(r => r.json())
+                .then(() => {
+                    messagesBox.innerHTML = `
+                        <div class="d-flex gap-2">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px; height:32px; font-size:0.8rem;">
+                                <i class="bi bi-robot"></i>
+                            </div>
+                            <div class="p-3 bg-white rounded-4 shadow-sm border" style="max-width:85%;">
+                                <p class="small text-dark mb-1">
+                                    Histórico limpo. Como posso ajudar com sua viagem agora?
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }, "Limpar Histórico");
         });
 
         document.querySelectorAll('.quick-ask-btn').forEach(btn => {
@@ -1131,7 +1207,8 @@
                 },
                 body: JSON.stringify({
                     mensagem: text,
-                    idioma: langSelect?.value || 'pt'
+                    idioma: langSelect?.value || 'pt',
+                    sessao_id: aiSessaoId
                 })
             })
             .then(r => r.json())
@@ -1174,7 +1251,7 @@
                     <i class="bi bi-robot"></i>
                 </div>
                 <div class="p-2 bg-white rounded-3 border text-muted small">
-                    <span class="spinner-grow spinner-grow-sm me-1"></span> Consultando base oficial...
+                    <span class="spinner-grow spinner-grow-sm me-1"></span> Consultando base oficial e criando sugestão...
                 </div>
             `;
             messagesBox.appendChild(div);
@@ -1210,6 +1287,25 @@
                 cardsHtml += '</div>';
             }
 
+            // Card de Plano de Turismo da IA (com Ação de Salvar)
+            let planoCardHtml = '';
+            if (dados.dados_extras && dados.dados_extras.plano_turismo) {
+                const p = dados.dados_extras.plano_turismo;
+                const planoJsonEncoded = encodeURIComponent(JSON.stringify(p));
+                planoCardHtml = `
+                    <div class="mt-3 p-3 rounded-4 border" style="background: linear-gradient(135deg, rgba(4,120,87,0.05), rgba(13,148,136,0.1)); border-color: rgba(4,120,87,0.2) !important;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-journal-bookmark-fill me-1"></i> ${p.dias} Dia(s)</span>
+                            <span class="fw-bold small text-dark">${p.titulo}</span>
+                        </div>
+                        <p class="small text-muted mb-2" style="font-size:0.75rem;">${p.descricao}</p>
+                        <button class="btn btn-sm btn-pite w-100 rounded-3 py-2 fw-semibold shadow-sm" onclick="salvarPlanoIa('${planoJsonEncoded}')">
+                            <i class="bi bi-bookmark-star-fill me-1"></i> Salvar este Roteiro no Meu Painel
+                        </button>
+                    </div>
+                `;
+            }
+
             let sugestoesHtml = '';
             if (dados.sugestoes && dados.sugestoes.length > 0) {
                 sugestoesHtml = '<div class="d-flex flex-wrap gap-1 mt-2">';
@@ -1226,6 +1322,7 @@
                 <div class="p-3 bg-white rounded-4 shadow-sm border" style="max-width:88%;">
                     <p class="small text-dark mb-1" style="line-height:1.5; white-space:pre-line;">${dados.resposta}</p>
                     ${cardsHtml}
+                    ${planoCardHtml}
                     ${sugestoesHtml}
                     <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style="font-size:0.65rem; color:#94a3b8;">
                         <span><i class="bi bi-patch-check-fill text-success"></i> ${dados.fonte_dados || 'Base Oficial'}</span>
@@ -1236,6 +1333,42 @@
             messagesBox.appendChild(div);
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
+
+        window.salvarPlanoIa = function(encodedJson) {
+            try {
+                const plano = JSON.parse(decodeURIComponent(encodedJson));
+                fetch('{{ route("api.ia.planos.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        titulo: plano.titulo,
+                        descricao: plano.descricao,
+                        dias: plano.dias,
+                        itens: plano.itens,
+                        sessao_chat_id: aiSessaoId
+                    })
+                })
+                .then(r => {
+                    if (r.status === 401) {
+                        alert('Para salvar este plano de turismo no seu painel, faça login como Turista!');
+                        window.location.href = '{{ route("turista.login") }}';
+                        return null;
+                    }
+                    return r.json();
+                })
+                .then(res => {
+                    if (res && res.sucesso) {
+                        alert('🎉 Plano de viagem salvo com sucesso! Você pode visualizá-lo e editá-lo no seu Painel de Turista.');
+                    }
+                });
+            } catch(e) {
+                console.error("Erro ao salvar plano:", e);
+            }
+        };
 
         window.askDirectly = function(msg) {
             chatInput.value = msg;

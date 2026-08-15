@@ -8,6 +8,7 @@ use App\Models\Categoria;
 use App\Models\Roteiro;
 use App\Services\AiItineraryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class RoteiroController extends Controller
 {
@@ -110,7 +111,22 @@ class RoteiroController extends Controller
             ->take(3)
             ->get();
 
-        return view('portal.roteiros.show', compact('roteiro', 'atrativosMapData', 'roteirosRelacionados'));
+        // Lista completa de atrativos para o modal de adição de pontos
+        $todosAtrativos = Atrativo::where('ativo', true)->get()->map(function($at) {
+            return [
+                'id' => $at->id,
+                'nome' => $at->nome,
+                'descricao' => $at->descricao_curta ?? Str::limit($at->descricao, 90),
+                'lat' => (float) $at->latitude,
+                'lng' => (float) $at->longitude,
+                'endereco' => $at->endereco ?? 'Centro',
+                'slug' => $at->slug,
+                'url' => route('portal.atrativos.show', $at->slug),
+                'acessivel' => !empty($at->niveis_acessibilidade['cadeirante'])
+            ];
+        });
+
+        return view('portal.roteiros.show', compact('roteiro', 'atrativosMapData', 'roteirosRelacionados', 'todosAtrativos'));
     }
 
     /**

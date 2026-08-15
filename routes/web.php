@@ -61,9 +61,18 @@ Route::get('/api/roteiros/{id}/offline-data', [RoteiroController::class, 'offlin
 
 // --- API DE INTELIGÊNCIA ARTIFICIAL (SEÇÃO 6) ---
 Route::post('/api/ia/chat', [AiAssistantController::class, 'chat'])->name('api.ia.chat');
+Route::get('/api/ia/historico', [AiAssistantController::class, 'carregarHistorico'])->name('api.ia.historico');
+Route::delete('/api/ia/historico', [AiAssistantController::class, 'limparHistorico'])->name('api.ia.limpar-historico');
 Route::post('/api/ia/traduzir', [AiAssistantController::class, 'traduzir'])->name('api.ia.traduzir');
 Route::post('/api/ia/gerar-descricao', [AiAssistantController::class, 'gerarDescricao'])->name('api.ia.gerar-descricao');
 Route::get('/api/ia/sentimento', [AiAssistantController::class, 'analiseSentimento'])->name('api.ia.sentimento');
+
+// Planos de Turismo Personalizados da IA
+Route::get('/api/ia/planos', [AiAssistantController::class, 'listarPlanos'])->name('api.ia.planos.index');
+Route::post('/api/ia/planos', [AiAssistantController::class, 'salvarPlano'])->name('api.ia.planos.store');
+Route::get('/api/ia/planos/{id}', [AiAssistantController::class, 'detalharPlano'])->name('api.ia.planos.show');
+Route::put('/api/ia/planos/{id}', [AiAssistantController::class, 'atualizarPlano'])->name('api.ia.planos.update');
+Route::delete('/api/ia/planos/{id}', [AiAssistantController::class, 'excluirPlano'])->name('api.ia.planos.destroy');
 
 Route::get('/eventos', [EventoController::class, 'index'])->name('portal.eventos.index');
 Route::get('/eventos/{slug}', [EventoController::class, 'show'])->name('portal.eventos.show');
@@ -84,6 +93,7 @@ Route::middleware(['auth', 'perfil:turista'])->prefix('turista')->name('turista.
     Route::get('/historico', [TuristaDashboardController::class, 'historico'])->name('historico');
     Route::post('/visita/registrar', [TuristaDashboardController::class, 'registrarVisita'])->name('visita.registrar');
     Route::get('/recomendacoes', [TuristaDashboardController::class, 'recomendacoes'])->name('recomendacoes');
+    Route::get('/planos-ia', [TuristaDashboardController::class, 'planosIa'])->name('planos');
 });
 
 // --- API JSON para Mapa Interativo ---

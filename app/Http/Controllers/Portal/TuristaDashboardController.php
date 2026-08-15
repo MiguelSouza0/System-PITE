@@ -10,6 +10,7 @@ use App\Models\Evento;
 use App\Models\Favorito;
 use App\Models\HistoricoVisita;
 use App\Models\Roteiro;
+use App\Models\AiPlanoTurismo;
 use Illuminate\Http\Request;
 
 class TuristaDashboardController extends Controller
@@ -25,7 +26,7 @@ class TuristaDashboardController extends Controller
         $totalVisitas = $user->historicoVisitas()->count();
         $totalAvaliacoes = $user->avaliacoes()->count();
         $totalFavoritos = $user->favoritos()->count();
-        $totalRoteiros = Roteiro::where('gerado_por_ia', true)->count(); // mock: considerar todos por agora
+        $totalRoteiros = AiPlanoTurismo::doUsuario($user->id)->count();
 
         // Últimas visitas
         $ultimasVisitas = $user->historicoVisitas()
@@ -279,5 +280,19 @@ class TuristaDashboardController extends Controller
         $query->orderBy('destaque', 'desc');
 
         return $query->take($limite)->get();
+    }
+
+    /**
+     * Exibe a página de Meus Planos de Turismo gerados pela IA
+     */
+    public function planosIa()
+    {
+        $user = auth()->user();
+
+        $planos = AiPlanoTurismo::doUsuario($user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('portal.turista.meus-planos', compact('planos'));
     }
 }
