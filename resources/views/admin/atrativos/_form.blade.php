@@ -47,9 +47,15 @@
                 </select>
             </div>
             <div class="col-12">
-                <label class="form-label small fw-semibold">Descrição *</label>
-                <textarea name="descricao" class="form-control rounded-3" rows="4" required
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label small fw-semibold mb-0">Descrição *</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold" id="btnGerarDescricaoIa">
+                        <i class="bi bi-stars text-warning me-1"></i> Assistente IA: Gerar Descrição Turística
+                    </button>
+                </div>
+                <textarea id="descricaoAtrativo" name="descricao" class="form-control rounded-3" rows="4" required
                           placeholder="Descrição detalhada do atrativo, incluindo contexto histórico...">{{ old('descricao', $atrativo->descricao ?? '') }}</textarea>
+                <small class="text-muted" id="iaDescricaoStatus"></small>
             </div>
         </div>
 
@@ -444,6 +450,60 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isNaN(latInicial) && !isNaN(lngInicial) && latInicial !== 0 && lngInicial !== 0) {
         atualizarMiniMapa(latInicial, lngInicial);
     }
+
+    // ═══ GERADOR DE DESCRIÇÃO TURÍSTICA COM IA (SEÇÃO 6) ═══
+    const btnGerarDesc = document.getElementById('btnGerarDescricaoIa');
+    const descField = document.getElementById('descricaoAtrativo');
+    const nomeInput = document.querySelector('input[name="nome"]');
+    const catSelect = document.querySelector('select[name="categoria_id"]');
+    const acessCheck = document.getElementById('acessCadeirante');
+    const statusIa = document.getElementById('iaDescricaoStatus');
+
+    btnGerarDesc?.addEventListener('click', function() {
+        const nome = nomeInput?.value.trim();
+        if (!nome) {
+            alert('Por favor, informe o Nome do Atrativo primeiro para a IA gerar o texto.');
+            nomeInput?.focus();
+            return;
+        }
+
+        btnGerarDesc.disabled = true;
+        btnGerarDesc.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Redigindo com IA...';
+        statusIa.textContent = '✨ O motor de IA está redigindo uma descrição turística institucional...';
+        statusIa.className = 'text-primary small';
+
+        fetch('{{ route("api.ia.gerar-descricao") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                nome: nome,
+                categoria_id: catSelect?.value || null,
+                endereco: enderecoInput?.value || null,
+                acessivel: acessCheck?.checked || false
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            btnGerarDesc.disabled = false;
+            btnGerarDesc.innerHTML = '<i class="bi bi-stars text-warning me-1"></i> Assistente IA: Gerar Descrição Turística';
+
+            if (res.sucesso && res.descricao) {
+                descField.value = res.descricao;
+                statusIa.textContent = '✅ Descrição sugerida com IA gerada com sucesso! Você pode revisar ou editar o texto.';
+                statusIa.className = 'text-success small';
+            }
+        })
+        .catch(() => {
+            btnGerarDesc.disabled = false;
+            btnGerarDesc.innerHTML = '<i class="bi bi-stars text-warning me-1"></i> Assistente IA: Gerar Descrição Turística';
+            statusIa.textContent = 'Erro ao gerar texto com IA. Tente novamente.';
+            statusIa.className = 'text-danger small';
+        });
+    });
 });
 </script>
 @endpush

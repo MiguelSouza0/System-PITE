@@ -27,16 +27,35 @@
                 <div class="card-body p-4 p-md-5">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">{{ $atrativo->categoria?->nome }}</span>
+                        
+                        <!-- Controles de Tradução Automática e Audiodescrição com IA -->
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="btn-group btn-group-sm rounded-pill border overflow-hidden bg-white shadow-sm" role="group" aria-label="Traduzir">
+                                <button type="button" class="btn btn-light btn-sm fw-bold px-2 py-1 btn-traduzir active" data-lang="pt">🇧🇷 PT</button>
+                                <button type="button" class="btn btn-light btn-sm fw-bold px-2 py-1 btn-traduzir" data-lang="en">🇺🇸 EN</button>
+                                <button type="button" class="btn btn-light btn-sm fw-bold px-2 py-1 btn-traduzir" data-lang="es">🇪🇸 ES</button>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold shadow-sm" id="btnAudioDescricaoAtrativo" title="Ouvir audiodescrição em voz alta">
+                                <i class="bi bi-volume-up-fill me-1"></i> <span id="lblAudioNarrador">Ouvir Guia</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
                         @if(($atrativo->preco_medio ?? 0) == 0)
                             <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill">Entrada Gratuita</span>
                         @else
                             <span class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-2 rounded-pill">Preço Médio: R$ {{ number_format($atrativo->preco_medio, 2, ',', '.') }}</span>
                         @endif
+                        <span class="badge bg-light text-muted border rounded-pill small" id="traducaoStatusBadge" style="display:none;">
+                            <i class="bi bi-translate text-primary me-1"></i> Tradução Instantânea IA
+                        </span>
                     </div>
 
-                    <h1 class="fw-bold mb-3">{{ $atrativo->nome }}</h1>
+                    <h1 class="fw-bold mb-3" id="atrativoNomeEl">{{ $atrativo->nome }}</h1>
                     
-                    <p class="lead text-muted mb-4">{{ $atrativo->descricao }}</p>
+                    <p class="lead text-muted mb-4" id="atrativoDescricaoEl">{{ $atrativo->descricao }}</p>
 
                     <!-- Recursos de Acessibilidade -->
                     <div class="card bg-light border-0 rounded-3 p-4 mb-4">
@@ -264,4 +283,102 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Tradução Instantânea com IA
+    const btnTraduzir = document.querySelectorAll('.btn-traduzir');
+    const nomeEl = document.getElementById('atrativoNomeEl');
+    const descEl = document.getElementById('atrativoDescricaoEl');
+    const badgeTraducao = document.getElementById('traducaoStatusBadge');
+
+    const originalNome = @json($atrativo->nome);
+    const originalDesc = @json($atrativo->descricao);
+
+    btnTraduzir.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const lang = this.dataset.lang;
+            btnTraduzir.forEach(b => b.classList.remove('active', 'btn-primary'));
+            this.classList.add('active');
+
+            if (lang === 'pt') {
+                nomeEl.textContent = originalNome;
+                descEl.textContent = originalDesc;
+                badgeTraducao.style.display = 'none';
+                return;
+            }
+
+            badgeTraducao.style.display = 'inline-block';
+            badgeTraducao.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Traduzindo com IA...';
+
+            fetch('{{ route("api.ia.traduzir") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    texto: originalDesc,
+                    para_idioma: lang
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.sucesso) {
+                    descEl.textContent = res.traducao;
+                    badgeTraducao.innerHTML = `<i class="bi bi-translate text-primary me-1"></i> Traduzido para ${lang.toUpperCase()} via IA`;
+                }
+            })
+            .catch(() => {
+                badgeTraducao.textContent = 'Erro na tradução.';
+            });
+        });
+    });
+
+    // 2. Audiodescrição Text-to-Speech
+    const btnAudio = document.getElementById('btnAudioDescricaoAtrativo');
+    const lblAudio = document.getElementById('lblAudioNarrador');
+    let isSpeaking = false;
+
+    btnAudio?.addEventListener('click', function() {
+        if (!('speechSynthesis' in window)) {
+            alert('Sua plataforma não suporta sintetizador de voz nativo.');
+            return;
+        }
+
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+            isSpeaking = false;
+            lblAudio.textContent = 'Ouvir Guia';
+            btnAudio.classList.remove('btn-success');
+            btnAudio.classList.add('btn-outline-success');
+            return;
+        }
+
+        const textoParaNarrar = `${originalNome}. ${originalDesc}. Informações oficiais da Secretaria Municipal de Turismo.`;
+        const utter = new SpeechSynthesisUtterance(textoParaNarrar);
+        utter.lang = 'pt-BR';
+        utter.rate = 1.0;
+
+        utter.onstart = function() {
+            isSpeaking = true;
+            lblAudio.textContent = 'Parar Áudio';
+            btnAudio.classList.remove('btn-outline-success');
+            btnAudio.classList.add('btn-success');
+        };
+
+        utter.onend = function() {
+            isSpeaking = false;
+            lblAudio.textContent = 'Ouvir Guia';
+            btnAudio.classList.remove('btn-success');
+            btnAudio.classList.add('btn-outline-success');
+        };
+
+        speechSynthesis.speak(utter);
+    });
+});
+</script>
+@endpush
 @endsection

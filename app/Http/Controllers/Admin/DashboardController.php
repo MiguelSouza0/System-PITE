@@ -10,16 +10,19 @@ use App\Models\Empreendedor;
 use App\Models\Evento;
 use App\Models\IndicadorEsg;
 use App\Models\User;
+use App\Services\AiItineraryService;
 use App\Services\EsgMetricService;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     protected $esgService;
+    protected $aiService;
 
-    public function __construct(EsgMetricService $esgService)
+    public function __construct(EsgMetricService $esgService, AiItineraryService $aiService)
     {
         $this->esgService = $esgService;
+        $this->aiService = $aiService;
     }
 
     public function index()
@@ -117,6 +120,9 @@ class DashboardController extends Controller
             ->groupBy('pilar')
             ->pluck('media', 'pilar');
 
+        // 10. --- INTELIGÊNCIA ARTIFICIAL: ANÁLISE DE SENTIMENTO & AVALIAÇÕES (SEÇÃO 6) ---
+        $analiseSentimentoIa = $this->aiService->analisarSentimentoAvaliacoes();
+
         $viewData = compact(
             'stats',
             'fluxoMensal',
@@ -130,7 +136,8 @@ class DashboardController extends Controller
             'ultimosAtrativos',
             'pendentes',
             'indicadoresEsg',
-            'esgPorPilar'
+            'esgPorPilar',
+            'analiseSentimentoIa'
         );
 
         if ($user && $user->isPrefeito()) {

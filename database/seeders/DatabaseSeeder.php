@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             EventoSeeder::class,
             IndicadorEsgSeeder::class,
             EmpreendedorSeeder::class,
+            RoteiroSeeder::class,
         ]);
     }
 }

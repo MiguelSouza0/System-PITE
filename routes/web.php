@@ -40,9 +40,19 @@ Route::get('/mapa-interativo', [MapaController::class, 'index'])->name('portal.m
 
 use App\Http\Controllers\Portal\RoteiroController;
 use App\Http\Controllers\Portal\EventoController;
+use App\Http\Controllers\Portal\AiAssistantController;
 
 Route::get('/roteiros-inteligentes', [RoteiroController::class, 'index'])->name('portal.roteiros');
 Route::post('/roteiros-inteligentes/gerar', [RoteiroController::class, 'gerar'])->name('portal.roteiros.gerar');
+Route::get('/roteiros/{slug}', [RoteiroController::class, 'show'])->name('portal.roteiros.show');
+Route::get('/roteiro-offline/{slug?}', [RoteiroController::class, 'offline'])->name('portal.roteiros.offline');
+Route::get('/api/roteiros/{id}/offline-data', [RoteiroController::class, 'offlineData'])->name('api.roteiros.offline-data');
+
+// --- API DE INTELIGÊNCIA ARTIFICIAL (SEÇÃO 6) ---
+Route::post('/api/ia/chat', [AiAssistantController::class, 'chat'])->name('api.ia.chat');
+Route::post('/api/ia/traduzir', [AiAssistantController::class, 'traduzir'])->name('api.ia.traduzir');
+Route::post('/api/ia/gerar-descricao', [AiAssistantController::class, 'gerarDescricao'])->name('api.ia.gerar-descricao');
+Route::get('/api/ia/sentimento', [AiAssistantController::class, 'analiseSentimento'])->name('api.ia.sentimento');
 
 Route::get('/eventos', [EventoController::class, 'index'])->name('portal.eventos.index');
 Route::get('/eventos/{slug}', [EventoController::class, 'show'])->name('portal.eventos.show');
