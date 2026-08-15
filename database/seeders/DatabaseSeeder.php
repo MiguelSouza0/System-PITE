@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             IndicadorEsgSeeder::class,
             EmpreendedorSeeder::class,
             RoteiroSeeder::class,
+            AvaliacaoSeeder::class,
+            SiteVisitaSeeder::class,
         ]);
     }
 }

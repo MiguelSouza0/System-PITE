@@ -12,341 +12,348 @@ class RoteiroSeeder extends Seeder
 {
     public function run(): void
     {
-        $validador = User::whereHas('perfil', fn($q) => $q->whereIn('slug', ['secretario', 'servidor']))->first() ?? User::first();
-        $atrativos = Atrativo::all();
+        $userAdmin = User::first();
 
-        if ($atrativos->isEmpty()) {
-            return;
-        }
-
-        $centroHistorico = $atrativos->firstWhere('slug', 'centro-historico-igreja-matriz') ?? $atrativos->first();
-        $parqueCachoeiras = $atrativos->firstWhere('slug', 'parque-ecologico-das-cachoeiras') ?? $atrativos->skip(1)->first() ?? $centroHistorico;
-        $mercadoPublico = $atrativos->firstWhere('slug', 'mercado-publico-municipal-feira-gastronomica') ?? $atrativos->skip(2)->first() ?? $centroHistorico;
-        $miranteSerra = $atrativos->firstWhere('slug', 'mirante-do-alto-da-serra') ?? $atrativos->skip(3)->first() ?? $centroHistorico;
+        $atrativos = Atrativo::pluck('id', 'slug')->toArray();
 
         $roteiros = [
             [
-                'titulo' => 'Roteiro Histórico & Cultural do Centro Colonial',
-                'slug' => 'roteiro-historico-cultural-centro-colonial',
-                'descricao' => 'Caminhada guiada pelo coração histórico do município. Descubra casarios preservados do século XVIII, arte sacra colonial, monumentos e feiras de artesanato com acessibilidade plena.',
-                'ponto_partida' => 'Praça da Matriz (Centro Histórico)',
-                'ponto_chegada' => 'Mercado Público Municipal',
-                'duracao_estimada_horas' => 3,
-                'distancia_total_km' => 2.4,
+                'titulo' => 'Rota Histórica & Berço da Paraíba no Centro Colonial',
+                'descricao' => 'Uma imersão fascinante pela história da terceira capital mais antiga do Brasil, fundada em 1585. O roteiro percorre o suntuoso conjunto barroco do Centro Cultural São Francisco, a histórica Casa da Pólvora (1710), a arborizada Lagoa Solon de Lucena e culmina com o poético pôr do sol nas margens do Rio Sanhauá a partir do Hotel Globo.',
+                'ponto_partida' => 'Parque da Lagoa Solon de Lucena - Centro',
+                'ponto_chegada' => 'Terraço Panorâmico do Hotel Globo - Varadouro',
+                'duracao_estimada_horas' => 4,
+                'distancia_total_km' => 3.8,
                 'nivel_dificuldade' => 'facil',
                 'meio_transporte' => 'a_pe',
                 'acessivel_pne' => true,
-                'faixa_etaria' => 'livre',
-                'orcamento_nivel' => 'gratuito',
-                'tema' => 'historico',
-                'perfil_publico_alvo' => 'cultural',
+                'faixa_etaria' => 'Livre para todas as idades (Família, Estudantes e Idosos)',
+                'orcamento_nivel' => 'economico',
+                'tema' => 'cultural',
                 'caracteristicas_percurso' => [
-                    'relevo' => 'Plano e calçamento regular',
-                    'pavimentacao' => 'Piso intertravado e calçadão com piso tátil',
-                    'sombreamento' => '80% arborizado com bancos de descanso',
-                    'tipo_percurso' => 'Urbano / Histórico'
+                    'tipo_piso' => 'Calçadão colonial e ruas de paralelepípedo com passeios acessíveis',
+                    'relevo' => 'Leve declive em direção ao Rio Sanhauá',
+                    'arborizacao' => 'Alta no Parque da Lagoa e Praça São Francisco',
+                    'pontos_interesse' => 4,
+                    'clima' => 'Agradável e ensolarado com brisa tropical'
                 ],
                 'servicos_disponiveis' => [
-                    'pontos_agua' => ['Bebedouro da Matriz', 'Posto de Informações Turísticas'],
-                    'banheiros' => ['Banheiro público acessível da Praça', 'Sanitários do Mercado'],
-                    'alimentacao' => ['Cafeterias históricas', 'Docerias típicas', 'Bistrôs'],
-                    'postos_saude' => ['UBS Centro (Rua do Comércio, 45)'],
-                    'apoio_turista' => 'Centro de Atendimento ao Turista (CAT Centro)'
+                    'pontos_agua' => 'Bebedouros públicos na Lagoa e no Centro Cultural',
+                    'banheiros' => 'Sanitários acessíveis em todos os atrativos do percurso',
+                    'alimentacao' => 'Cafeterias históricas, quiosques da Lagoa e bistrôs na Praça Antenor Navarro',
+                    'postos_informacao' => 'Centro de Atendimento ao Turista (CAT) no Hotel Globo',
+                    'estacionamento' => 'Vagas públicas demarcadas no entorno da Praça da Matriz'
                 ],
                 'orientacoes_seguranca' => [
-                    'vestuario' => 'Roupas leves e calçados confortáveis para caminhada em pedra',
-                    'hidratacao' => 'Mantenha garrafa d\'água abastecida nos pontos do trajeto',
-                    'sol' => 'Uso de protetor solar e chapéu nas praças abertas',
-                    'emergencia' => 'Polícia Militar: 190 | SAMU: 192 | Guarda Municipal: 153',
-                    'melhor_horario' => 'Manhã (08h30 às 11h30) ou Tarde (15h às 18h)'
+                    'geral' => 'Utilize calçados confortáveis para caminhada em piso histórico e mantenha-se hidratado.',
+                    'sol' => 'Recomenda-se uso de protetor solar, óculos escuros e chapéu durante as caminhadas matinais.',
+                    'telefones_emergencia' => [
+                        'Guarda Municipal / Turística' => '153',
+                        'Polícia Militar' => '190',
+                        'SAMU' => '192',
+                        'Corpo de Bombeiros' => '193',
+                        'Defesa Civil' => '199'
+                    ]
                 ],
                 'polylines_coordenadas' => [
-                    [-22.7394, -45.5913],
-                    [-22.7388, -45.5908],
-                    [-22.7380, -45.5900]
+                    [-7.1215, -34.8825],
+                    [-7.1147, -34.8872],
+                    [-7.1120, -34.8860],
+                    [-7.1128, -34.8885]
                 ],
+                'atrativos_slugs' => [
+                    'parque-da-lagoa-solon-de-lucena',
+                    'centro-cultural-sao-francisco',
+                    'casa-da-polvora-centro-cultural',
+                    'hotel-globo-praca-antenor-navarro'
+                ],
+                'perfil_publico_alvo' => 'Amantes de história, arquitetura colonial barroca, fotografia urbana e turismo cultural.',
                 'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Roteiro oficial aprovado pela Secretaria Municipal de Turismo com foco em patrimônio imaterial e acessibilidade plena (WCAG 2.2 AA).',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $centroHistorico->id, 'ordem' => 1, 'tempo_estimado' => '1h30', 'observacao' => 'Visita à Igreja Matriz, Museu Sacro e casarios históricos.'],
-                    ['id' => $mercadoPublico->id, 'ordem' => 2, 'tempo_estimado' => '1h30', 'observacao' => 'Degustação gastronômica, artesanato típico e compras regionais.']
-                ]
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Roteiro histórico clássico com ótima acessibilidade, rica arquitetura sacra e o mais belo pôr do sol fluvial de João Pessoa.',
+                'ativo' => true
             ],
             [
-                'titulo' => 'Circuito Ecoturismo das Cachoeiras & Mirante da Serra',
-                'slug' => 'circuito-ecoturismo-cachoeiras-mirante-serra',
-                'descricao' => 'Uma imersão completa na natureza municipal. Conheça as quatro cachoeiras mais preservadas da região com banho refrescante, trilhas ecológicas sinalizadas e encerramento com o pôr do sol inesquecível no Mirante 360°.',
-                'ponto_partida' => 'Portal da Estrada Ecológica Municipal (Km 0)',
-                'ponto_chegada' => 'Mirante do Alto da Serra',
+                'titulo' => 'Circuito das Praias Urbanas & Ponto Mais Oriental das Américas',
+                'descricao' => 'Um percurso revigorante ao longo do litoral pessoense, onde o sol nasce primeiro nas Américas continentais. O itinerário passa pelo agito da orla de Tambaú, as falésias de Cabo Branco, o imponente complexo arquitetônico da Estação Cabo Branco assinado por Oscar Niemeyer e o mirante do Farol do Cabo Branco na Ponta do Seixas.',
+                'ponto_partida' => 'Feirinha de Artesanato e Busto de Tamandaré - Tambaú',
+                'ponto_chegada' => 'Farol do Cabo Branco - Falésias da Ponta do Seixas',
+                'duracao_estimada_horas' => 5,
+                'distancia_total_km' => 7.2,
+                'nivel_dificuldade' => 'facil',
+                'meio_transporte' => 'bicicleta',
+                'acessivel_pne' => true,
+                'faixa_etaria' => 'Livre (Jovens, Adultos e Cicloturistas)',
+                'orcamento_nivel' => 'economico',
+                'tema' => 'ecoturismo',
+                'caracteristicas_percurso' => [
+                    'tipo_piso' => 'Ciclovia pavimentada à beira-mar e asfalto com acostamento largo',
+                    'relevo' => 'Plano na orla com subida suave para o Altiplano Cabo Branco',
+                    'arborizacao' => 'Coqueirais e vegetação de restinga costeira',
+                    'pontos_interesse' => 4,
+                    'clima' => 'Brisa marinha constante e sol abundante'
+                ],
+                'servicos_disponiveis' => [
+                    'pontos_agua' => 'Quiosques com água de coco natural e postos de hidratação na orla',
+                    'banheiros' => 'Quiosques municipais e banheiros acessíveis na Estação Cabo Branco',
+                    'alimentacao' => 'Restaurantes de frutos do mar, quiosques da orla e tapiocas em Tambaú',
+                    'postos_informacao' => 'CAT Busto de Tamandaré e recepção da Estação Cabo Branco',
+                    'estacionamento' => 'Estacionamento amplo gratuito na Estação Cabo Branco e orla'
+                ],
+                'orientacoes_seguranca' => [
+                    'geral' => 'Respeite a faixa de ciclistas e pedestres. Na praia, atente-se às bandeiras de banho dos Bombeiros.',
+                    'sol' => 'Hidratação constante com água de coco e uso de protetor solar FPS 50+.',
+                    'telefones_emergencia' => [
+                        'Guarda Turística' => '153',
+                        'Polícia Turística (CEATUR)' => '(83) 3214-8020',
+                        'Salva-Vidas (Bombeiros)' => '193',
+                        'SAMU' => '192'
+                    ]
+                ],
+                'polylines_coordenadas' => [
+                    [-7.1158, -34.8239],
+                    [-7.1350, -34.8190],
+                    [-7.1492, -34.7997],
+                    [-7.1478, -34.7964]
+                ],
+                'atrativos_slugs' => [
+                    'praia-de-tambau-feirinha-de-artesanato',
+                    'praia-do-cabo-branco-calcadao-ecologico',
+                    'estacao-cabo-branco-ciencia-cultura-e-artes',
+                    'farol-do-cabo-branco-ponta-do-seixas'
+                ],
+                'perfil_publico_alvo' => 'Cicloturistas, apreciadores da natureza litorânea, turistas em busca do ponto extremo oriental.',
+                'gerado_por_ia' => false,
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Trajeto costeiro panorâmico com ciclovia contínua, ciência e a emoção de visitar o ponto mais a leste de todo o continente americano.',
+                'ativo' => true
+            ],
+            [
+                'titulo' => 'Rota Gastronômica dos Sabores Paraibanos & Artesanato do MAP',
+                'descricao' => 'Uma viagem sensorial inigualável pela premiada culinária regional paraibana e pela tradição centenária do artesanato têxtil. O roteiro inclui visita guiada aos mais de 150 boxes do Mercado de Artesanato Paraibano (MAP), degustação de pratos típicos como carne de sol na nata, rubacão e queijo de coalho, e compras de peças legítimas em algodão colorido.',
+                'ponto_partida' => 'Mercado de Artesanato Paraibano (MAP) - Tambaú',
+                'ponto_chegada' => 'Feirinha de Tambaú e Orla Gastronômica',
+                'duracao_estimada_horas' => 3,
+                'distancia_total_km' => 2.1,
+                'nivel_dificuldade' => 'facil',
+                'meio_transporte' => 'a_pe',
+                'acessivel_pne' => true,
+                'faixa_etaria' => 'Todas as idades',
+                'orcamento_nivel' => 'moderado',
+                'tema' => 'gastronomia',
+                'caracteristicas_percurso' => [
+                    'tipo_piso' => 'Calçadas largas e planas com piso tátil e rampas',
+                    'relevo' => 'Completamente plano',
+                    'arborizacao' => 'Áreas climatizadas e calçadões com sombra',
+                    'pontos_interesse' => 2,
+                    'clima' => 'Agradável'
+                ],
+                'servicos_disponiveis' => [
+                    'pontos_agua' => 'Disponível nos centros comerciais e restaurantes',
+                    'banheiros' => 'Sanitários climatizados e adaptados para PNE no MAP',
+                    'alimentacao' => 'Restaurantes premiados de culinária nordestina e quiosques',
+                    'postos_informacao' => 'Balcão de informações turísticas no MAP',
+                    'estacionamento' => 'Vagas rotativas e privativas'
+                ],
+                'orientacoes_seguranca' => [
+                    'geral' => 'Compre apenas artesanato com o Selo de Autenticidade Paraibana para valorizar as rendeiras locais.',
+                    'telefones_emergencia' => [
+                        'Polícia Militar' => '190',
+                        'SAMU' => '192',
+                        'Procon Municipal' => '151'
+                    ]
+                ],
+                'polylines_coordenadas' => [
+                    [-7.1165, -34.8290],
+                    [-7.1158, -34.8239]
+                ],
+                'atrativos_slugs' => [
+                    'mercado-de-artesanato-paraibano-map',
+                    'praia-de-tambau-feirinha-de-artesanato'
+                ],
+                'perfil_publico_alvo' => 'Apreciadores da boa mesa nordestina, compradores de artesanato e turistas culturais.',
+                'gerado_por_ia' => false,
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Excelente para tardes e noites, combinando alta gastronomia regional e produtos sustentáveis de algodão colorido.',
+                'ativo' => true
+            ],
+            [
+                'titulo' => 'Ecoturismo Marinho & Piscinas Naturais do Seixas e Caribessa',
+                'descricao' => 'Uma experiência de conexão pura com a rica biodiversidade marinha e costeira de João Pessoa. O roteiro leva o visitante para as piscinas de corais do Seixas através de catamarãs ecológicos e para as águas límpidas e calmas do Caribessa, com caiaque e observação de tartarugas marinhas.',
+                'ponto_partida' => 'Praia do Bessa (Caribessa)',
+                'ponto_chegada' => 'Piscinas Naturais do Seixas',
                 'duracao_estimada_horas' => 6,
-                'distancia_total_km' => 14.8,
+                'distancia_total_km' => 12.5,
                 'nivel_dificuldade' => 'medio',
                 'meio_transporte' => 'carro',
                 'acessivel_pne' => false,
-                'faixa_etaria' => 'jovens',
-                'orcamento_nivel' => 'economico',
-                'tema' => 'ecoturismo',
-                'perfil_publico_alvo' => 'aventura',
-                'caracteristicas_percurso' => [
-                    'relevo' => 'Trilhas de terra batida com aclives moderados e pedras',
-                    'pavimentacao' => 'Estrada ecológica cascalhada + passarelas de madeira',
-                    'sombreamento' => 'Mata Atlântica fechada (90% de sombra na trilha)',
-                    'tipo_percurso' => 'Natural / Rural / Ecoturismo'
-                ],
-                'servicos_disponiveis' => [
-                    'pontos_agua' => ['Sede do Parque Ecológico', 'Quiosque do Mirante'],
-                    'banheiros' => ['Vestiários e sanitários na entrada do Parque'],
-                    'alimentacao' => ['Restaurante de comida caipira e lanchonetes orgânicas'],
-                    'postos_saude' => ['Posto de Primeiros Socorros do Parque'],
-                    'apoio_turista' => 'Base dos Condutores de Ecoturismo Credenciados'
-                ],
-                'orientacoes_seguranca' => [
-                    'vestuario' => 'Tênis aderente para trilha ou bota, roupa de banho por baixo e repelente',
-                    'hidratacao' => 'Levar no mínimo 1,5L de água por pessoa',
-                    'sol' => 'Protetor solar biodegradável para proteger as nascentes',
-                    'emergencia' => 'Corpo de Bombeiros: 193 | Defesa Civil: 199 | Polícia Ambiental: (83) 3218-5000',
-                    'melhor_horario' => 'Início às 08h00 para aproveitar as cachoeiras com sol e chegar ao mirante às 17h00.'
-                ],
-                'polylines_coordenadas' => [
-                    [-22.7450, -45.5850],
-                    [-22.7380, -45.5900],
-                    [-22.7290, -45.6020]
-                ],
-                'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Roteiro de turismo de natureza com protocolo ESG de baixo impacto e coleta de resíduos zero.',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $parqueCachoeiras->id, 'ordem' => 1, 'tempo_estimado' => '3h30', 'observacao' => 'Trilha das 4 quedas d\'água, banho de cachoeira e visita ao viveiro nativo.'],
-                    ['id' => $mercadoPublico->id, 'ordem' => 2, 'tempo_estimado' => '1h30', 'observacao' => 'Almoço caipira típico com ingredientes da agricultura familiar.'],
-                    ['id' => $miranteSerra->id, 'ordem' => 3, 'tempo_estimado' => '1h00', 'observacao' => 'Pôr do sol panorâmico 360° na passarela de vidro.'],
-                ]
-            ],
-            [
-                'titulo' => 'Circuito Gastronômico & Sabores da Terra',
-                'slug' => 'circuito-gastronomico-sabores-da-terra',
-                'descricao' => 'Uma viagem sensorial pela culinária típica, quitutes tradicionais, doces caseiros e queijos artesanais produzidos por agricultores locais com certificação de origem.',
-                'ponto_partida' => 'Mercado Público Municipal',
-                'ponto_chegada' => 'Feira Noturna de Artesanato e Gastronomia',
-                'duracao_estimada_horas' => 4,
-                'distancia_total_km' => 3.2,
-                'nivel_dificuldade' => 'facil',
-                'meio_transporte' => 'a_pe',
-                'acessivel_pne' => true,
-                'faixa_etaria' => 'livre',
+                'faixa_etaria' => 'Adultos, Jovens e Crianças acompanhadas',
                 'orcamento_nivel' => 'moderado',
-                'tema' => 'gastronomia',
-                'perfil_publico_alvo' => 'familia',
+                'tema' => 'aventura',
                 'caracteristicas_percurso' => [
-                    'relevo' => 'Plano urbano',
-                    'pavimentacao' => 'Asfalto com calçadas rebaixadas e piso tátil',
-                    'sombreamento' => 'Ambientes cobertos e bulevares arborizados',
-                    'tipo_percurso' => 'Gastronômico / Cultural'
+                    'tipo_piso' => 'Areia da praia, decks de embarque e navegação costeira',
+                    'relevo' => 'Nível do mar',
+                    'arborizacao' => 'Ambiente praiano com sol pleno',
+                    'pontos_interesse' => 2,
+                    'clima' => 'Tropical úmido com água do mar a 28°C'
                 ],
                 'servicos_disponiveis' => [
-                    'pontos_agua' => ['Bebedouros nos estabelecimentos e praças'],
-                    'banheiros' => ['Banheiros acessíveis em todos os pontos parceiros'],
-                    'alimentacao' => ['Restaurantes com selo municipal de qualidade'],
-                    'postos_saude' => ['UPA Central 24h'],
-                    'apoio_turista' => 'Tenda Gastronômica Municipal'
+                    'pontos_agua' => 'Água mineral a bordo das embarcações credenciadas',
+                    'banheiros' => 'Disponíveis nos pontos de apoio em terra firme',
+                    'alimentacao' => 'Barracas de praia sustentáveis com peixe frito e frutos do mar',
+                    'postos_informacao' => 'Operadoras náuticas credenciadas pela Capitania dos Portos',
+                    'estacionamento' => 'Estacionamento de apoio na Praia do Seixas e Bessa'
                 ],
                 'orientacoes_seguranca' => [
-                    'vestuario' => 'Roupas leves e confortáveis',
-                    'hidratacao' => 'Beba água entre as degustações',
-                    'sol' => 'Proteção solar padrão',
-                    'emergencia' => 'Vigilância Sanitária: (83) 3333-1122 | SAMU: 192',
-                    'melhor_horario' => 'Início às 11h30 para o almoço ou às 17h30 para o circuito noturno.'
+                    'geral' => 'Consulte a tábua de marés com antecedência (maré inferior a 0.5m é ideal). Uso de colete salva-vidas obrigatório durante a travessia de catamarã.',
+                    'meio_ambiente' => 'Proibido tocar ou pisar nos corais vivos. Utilize protetor solar biodegradável.',
+                    'telefones_emergencia' => [
+                        'Capitania dos Portos da Paraíba' => '(83) 3241-2805',
+                        'Corpo de Bombeiros / Salvamento Marítimo' => '193',
+                        'SAMU' => '192'
+                    ]
                 ],
                 'polylines_coordenadas' => [
-                    [-22.7380, -45.5900],
-                    [-22.7394, -45.5913]
+                    [-7.0680, -34.8340],
+                    [-7.1610, -34.7930]
                 ],
+                'atrativos_slugs' => [
+                    'praia-do-bessa-piscinas-do-caribessa',
+                    'piscinas-naturais-do-seixas'
+                ],
+                'perfil_publico_alvo' => 'Praticantes de esportes náuticos, mergulho livre (snorkel) e amantes de vida marinha.',
                 'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Roteiro com foco em economia criativa local e incentivo à agricultura familiar sustentável.',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $mercadoPublico->id, 'ordem' => 1, 'tempo_estimado' => '2h00', 'observacao' => 'Degustação guiada de queijos, embutidos e pratos de panelada regional.'],
-                    ['id' => $centroHistorico->id, 'ordem' => 2, 'tempo_estimado' => '2h00', 'observacao' => 'Cafeteria colonial e compras de doces artesanais e licores típicos.']
-                ]
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Roteiro náutico e marinho de grande beleza cênica, ideal para os dias de maré seca matinal.',
+                'ativo' => true
             ],
             [
-                'titulo' => 'Roteiro de Fé, Tradições e Igrejas Coloniais',
-                'slug' => 'roteiro-fe-tradicoes-igrejas-coloniais',
-                'descricao' => 'Caminhada de contemplação e devoção pelas capelas históricas, santuários e cruzeiros centenários que marcam a fundação e a espiritualidade do nosso povo.',
-                'ponto_partida' => 'Igreja Matriz Nossa Senhora do Rosário',
-                'ponto_chegada' => 'Capela do Alto do Cruzeiro',
+                'titulo' => 'Roteiro Familiar & Verde: Parques Urbanos, Bica e Lagoa',
+                'descricao' => 'Um itinerário encantador pensado especialmente para famílias com crianças e idosos. O percurso desfruta das sombras acolhedoras da Mata Atlântica no Parque Zoobotânico Arruda Câmara (A Bica), com pedalinhos e fontes históricas, seguindo para o Parque da Lagoa e encerrando na Estação Cabo Branco com oficinas infantis e planetário.',
+                'ponto_partida' => 'Parque Zoobotânico Arruda Câmara (A Bica) - Roger',
+                'ponto_chegada' => 'Estação Cabo Branco Ciência, Cultura e Artes',
+                'duracao_estimada_horas' => 5,
+                'distancia_total_km' => 9.5,
+                'nivel_dificuldade' => 'facil',
+                'meio_transporte' => 'carro',
+                'acessivel_pne' => true,
+                'faixa_etaria' => 'Família com crianças e terceira idade',
+                'orcamento_nivel' => 'economico',
+                'tema' => 'familia',
+                'caracteristicas_percurso' => [
+                    'tipo_piso' => 'Alamedas pavimentadas, calçadões planos e rampas de acesso',
+                    'relevo' => 'Suave e totalmente acessível para carrinhos de bebê e cadeiras de rodas',
+                    'arborizacao' => 'Excepcional na Bica e na Lagoa',
+                    'pontos_interesse' => 3,
+                    'clima' => 'Sombra fresca e agradável'
+                ],
+                'servicos_disponiveis' => [
+                    'pontos_agua' => 'Bebedouros infantis e quiosques em todos os parques',
+                    'banheiros' => 'Fraldários e sanitários adaptados com acessibilidade universal',
+                    'alimentacao' => 'Lanchonetes saudáveis, sorveterias e praça de alimentação',
+                    'postos_informacao' => 'Guichês de atendimento ao visitante na Bica e na Estação',
+                    'estacionamento' => 'Estacionamento interno e vigiado'
+                ],
+                'orientacoes_seguranca' => [
+                    'geral' => 'Mantenha as crianças identificadas com pulseira e hidrate os pequenos com frequência.',
+                    'telefones_emergencia' => [
+                        'Guarda Municipal / Ronda dos Parques' => '153',
+                        'SAMU' => '192',
+                        'Corpo de Bombeiros' => '193'
+                    ]
+                ],
+                'polylines_coordenadas' => [
+                    [-7.1235, -34.8778],
+                    [-7.1215, -34.8825],
+                    [-7.1492, -34.7997]
+                ],
+                'atrativos_slugs' => [
+                    'parque-zoobotanico-arruda-camara-a-bica',
+                    'parque-da-lagoa-solon-de-lucena',
+                    'estacao-cabo-branco-ciencia-cultura-e-artes'
+                ],
+                'perfil_publico_alvo' => 'Famílias com crianças pequenas, idosos e grupos escolares.',
+                'gerado_por_ia' => false,
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Roteiro educativo, seguro e relaxante com contato com a natureza e ciência lúdica para todas as idades.',
+                'ativo' => true
+            ],
+            [
+                'titulo' => 'Circuito da Fé, Barroco e Tradições Sacras',
+                'descricao' => 'Um roteiro contemplativo de espiritualidade e riqueza histórica através dos mais preservados templos católicos e conventos barrocos de João Pessoa, que testemunharam a evangelização do Nordeste desde o fim do século XVI.',
+                'ponto_partida' => 'Igreja de São Francisco (Centro Cultural)',
+                'ponto_chegada' => 'Igreja de São Frei Pedro Gonçalves e Hotel Globo',
                 'duracao_estimada_horas' => 3,
                 'distancia_total_km' => 1.8,
                 'nivel_dificuldade' => 'facil',
                 'meio_transporte' => 'a_pe',
                 'acessivel_pne' => true,
-                'faixa_etaria' => 'melhor_idade',
+                'faixa_etaria' => 'Livre (Turismo Religioso e Cultural)',
                 'orcamento_nivel' => 'gratuito',
                 'tema' => 'religioso',
-                'perfil_publico_alvo' => 'cultural',
                 'caracteristicas_percurso' => [
-                    'relevo' => 'Suave aclive até o cruzeiro com rampas e corrimãos',
-                    'pavimentacao' => 'Piso histórico com faixas acessíveis contínuas',
-                    'sombreamento' => 'Praças ajardinadas com bancos frondosos',
-                    'tipo_percurso' => 'Religioso / Contemplativo'
+                    'tipo_piso' => 'Calçamento histórico preservado com rampas laterais',
+                    'relevo' => 'Plano no platô histórico',
+                    'arborizacao' => 'Praças ajardinadas',
+                    'pontos_interesse' => 2,
+                    'clima' => 'Silencioso e acolhedor'
                 ],
                 'servicos_disponiveis' => [
-                    'pontos_agua' => ['Bebedouro na Sacristia e Casa Paroquial'],
-                    'banheiros' => ['Sanitários no Centro Pastoral'],
-                    'alimentacao' => ['Casas de chá e lanchonetes tradicionais'],
-                    'postos_saude' => ['Posto de Apoio da Cruz Vermelha / UBS'],
-                    'apoio_turista' => 'Secretaria Paroquial e Guias da Pastoral do Turismo'
+                    'pontos_agua' => 'Disponível nas recepções e sacristias',
+                    'banheiros' => 'Sanitários limpos e adaptados',
+                    'alimentacao' => 'Cafés e lanchonetes nas proximidades',
+                    'postos_informacao' => 'Guias monitores voluntários e credenciados',
+                    'estacionamento' => 'Vagas públicas nas imediações'
                 ],
                 'orientacoes_seguranca' => [
-                    'vestuario' => 'Traje respeitoso para ambientes religiosos e calçado macio',
-                    'hidratacao' => 'Levar água em dias quentes',
-                    'sol' => 'Sombrinha ou chapéu para o percurso do cruzeiro',
-                    'emergencia' => 'Guarda Municipal: 153 | SAMU: 192',
-                    'melhor_horario' => 'Manhãs de Quarta a Domingo (08h30 às 11h30).'
+                    'geral' => 'Respeite os momentos de celebração religiosa e as regras de fotografia sem flash no interior dos templos históricos.',
+                    'telefones_emergencia' => [
+                        'Guarda Municipal' => '153',
+                        'Polícia Militar' => '190'
+                    ]
                 ],
                 'polylines_coordenadas' => [
-                    [-22.7394, -45.5913],
-                    [-22.7380, -45.5900]
+                    [-7.1147, -34.8872],
+                    [-7.1128, -34.8885]
                 ],
+                'atrativos_slugs' => [
+                    'centro-cultural-sao-francisco',
+                    'hotel-globo-praca-antenor-navarro'
+                ],
+                'perfil_publico_alvo' => 'Turistas religiosos, pesquisadores de arte sacra e famílias.',
                 'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Roteiro de turismo religioso e imaterial com infraestrutura adaptada para idosos e mobilidade reduzida.',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $centroHistorico->id, 'ordem' => 1, 'tempo_estimado' => '2h00', 'observacao' => 'Visita à Nave Central, Altar Barroco e Cripta Histórica.'],
-                    ['id' => $mercadoPublico->id, 'ordem' => 2, 'tempo_estimado' => '1h00', 'observacao' => 'Feira de arte sacra, terços artesanais e imagens talhadas em madeira.']
-                ]
-            ],
-            [
-                'titulo' => 'Roteiro Express: Cartões-Postais em Meio Dia',
-                'slug' => 'roteiro-express-cartoes-postais-meio-dia',
-                'descricao' => 'Ideal para quem tem pouco tempo mas não abre mão de conhecer os principais pontos turísticos da cidade com conforto e agilidade.',
-                'ponto_partida' => 'Centro Histórico & Matriz',
-                'ponto_chegada' => 'Mirante do Alto da Serra',
-                'duracao_estimada_horas' => 4,
-                'distancia_total_km' => 8.5,
-                'nivel_dificuldade' => 'facil',
-                'meio_transporte' => 'carro',
-                'acessivel_pne' => true,
-                'faixa_etaria' => 'livre',
-                'orcamento_nivel' => 'moderado',
-                'tema' => 'misto',
-                'perfil_publico_alvo' => 'familia',
-                'caracteristicas_percurso' => [
-                    'relevo' => 'Urbano e serra pavimentada',
-                    'pavimentacao' => '100% asfaltado com vagas demarcadas',
-                    'sombreamento' => 'Locais com estacionamento e áreas cobertas',
-                    'tipo_percurso' => 'Panorâmico / Rodoviário'
-                ],
-                'servicos_disponiveis' => [
-                    'pontos_agua' => ['Disponível em todos os 3 atrativos'],
-                    'banheiros' => ['Banheiros acessíveis em todos os pontos'],
-                    'alimentacao' => ['Restaurantes, quiosques e cafeterias'],
-                    'postos_saude' => ['Hospital Regional e UPA'],
-                    'apoio_turista' => 'Totens de autoatendimento inteligente'
-                ],
-                'orientacoes_seguranca' => [
-                    'vestuario' => 'Roupas casuais e câmera ou smartphone carregado',
-                    'hidratacao' => 'Água mineral disponível nos locais',
-                    'sol' => 'Protetor solar e óculos escuros',
-                    'emergencia' => 'Polícia Rodoviária: 191 | SAMU: 192',
-                    'melhor_horario' => '14h00 às 18h00 para fotos perfeitas na golden hour do Mirante.'
-                ],
-                'polylines_coordenadas' => [
-                    [-22.7394, -45.5913],
-                    [-22.7380, -45.5900],
-                    [-22.7290, -45.6020]
-                ],
-                'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Roteiro otimizado por algoritmo de menor trajeto conectando as 3 principais atrações municipais.',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $centroHistorico->id, 'ordem' => 1, 'tempo_estimado' => '1h15', 'observacao' => 'Passeio fotográfico no centro histórico e Igreja Matriz.'],
-                    ['id' => $mercadoPublico->id, 'ordem' => 2, 'tempo_estimado' => '1h15', 'observacao' => 'Parada gourmet para lanche regional e café especial.'],
-                    ['id' => $miranteSerra->id, 'ordem' => 3, 'tempo_estimado' => '1h30', 'observacao' => 'Passarela panorâmica e fotos no deck de vidro ao entardecer.']
-                ]
-            ],
-            [
-                'titulo' => 'Grande Travessia Municipal: Fim de Semana Completo',
-                'slug' => 'grande-travessia-municipal-fim-de-semana',
-                'descricao' => 'A jornada definitiva de 2 dias pelo município: patrimônio cultural no sábado de manhã, gastronomia e artesanato à tarde, noitada gastronômica, e ecoturismo com cachoeiras e mirante no domingo!',
-                'ponto_partida' => 'Hotel Fazenda / Pousada Central',
-                'ponto_chegada' => 'Mirante do Alto da Serra',
-                'duracao_estimada_horas' => 16,
-                'distancia_total_km' => 22.0,
-                'nivel_dificuldade' => 'medio',
-                'meio_transporte' => 'misto',
-                'acessivel_pne' => false,
-                'faixa_etaria' => 'adultos',
-                'orcamento_nivel' => 'premium',
-                'tema' => 'misto',
-                'perfil_publico_alvo' => 'aventura',
-                'caracteristicas_percurso' => [
-                    'relevo' => 'Misto (urbano plano + serra e trilha florestal)',
-                    'pavimentacao' => 'Asfalto, calçamento histórico e trilha de terra batida',
-                    'sombreamento' => 'Alternância entre ambientes urbanos e mata nativa',
-                    'tipo_percurso' => 'Circuito Completo 2 Dias'
-                ],
-                'servicos_disponiveis' => [
-                    'pontos_agua' => ['Em todos os atrativos e pousadas parceiras'],
-                    'banheiros' => ['Rede completa de sanitários no trajeto'],
-                    'alimentacao' => ['Restaurantes credenciados e café colonial'],
-                    'postos_saude' => ['Rede municipal de saúde integrada'],
-                    'apoio_turista' => 'Linha Direta do Turista via WhatsApp Oficial'
-                ],
-                'orientacoes_seguranca' => [
-                    'vestuario' => 'Traga mochila com troca de roupas, tênis reserva, agasalho leve para a serra e protetor solar',
-                    'hidratacao' => 'Mantenha-se constantemente hidratado ao longo dos 2 dias',
-                    'sol' => 'Reposição frequente de filtro solar',
-                    'emergencia' => 'Defesa Civil: 199 | SAMU: 192 | Polícia: 190 | CAT Municipal: (83) 3333-0000',
-                    'melhor_horario' => 'Sábado das 09h às 21h e Domingo das 08h às 18h.'
-                ],
-                'polylines_coordenadas' => [
-                    [-22.7394, -45.5913],
-                    [-22.7380, -45.5900],
-                    [-22.7450, -45.5850],
-                    [-22.7290, -45.6020]
-                ],
-                'gerado_por_ia' => false,
-                'validado_por_user_id' => $validador?->id,
-                'resumo_ia' => 'Experiência imersiva integrada validada pelo Conselho Municipal de Turismo e ESG Sustentabilidade.',
-                'ativo' => true,
-                'atrativos' => [
-                    ['id' => $centroHistorico->id, 'ordem' => 1, 'tempo_estimado' => '3h00', 'observacao' => 'Sábado Manhã: Tour histórico completo com guia local.'],
-                    ['id' => $mercadoPublico->id, 'ordem' => 2, 'tempo_estimado' => '3h00', 'observacao' => 'Sábado Tarde: Almoço típico e feira de artesanato.'],
-                    ['id' => $parqueCachoeiras->id, 'ordem' => 3, 'tempo_estimado' => '5h00', 'observacao' => 'Domingo Manhã: Ecoturismo, banho de cachoeira e trilhas.'],
-                    ['id' => $miranteSerra->id, 'ordem' => 4, 'tempo_estimado' => '2h00', 'observacao' => 'Domingo Fim de Tarde: Encerramento no Mirante com vista do vale.']
-                ]
+                'validado_por_user_id' => $userAdmin?->id,
+                'resumo_ia' => 'Roteiro de contemplação e devoção pelo mais rico patrimônio sacro do Nordeste brasileiro.',
+                'ativo' => true
             ]
         ];
 
-        foreach ($roteiros as $data) {
-            $atrativosData = $data['atrativos'] ?? [];
-            unset($data['atrativos']);
+        foreach ($roteiros as $rotData) {
+            $slugsAtrativos = $rotData['atrativos_slugs'] ?? [];
+            unset($rotData['atrativos_slugs']);
 
             $roteiro = Roteiro::updateOrCreate(
-                ['slug' => $data['slug']],
-                $data
+                ['slug' => Str::slug($rotData['titulo'])],
+                $rotData
             );
 
-            // Sincronizar tabela pivot
+            // Sincronizar atrativos no relacionamento Many-to-Many com ordem e tempos
             $syncData = [];
-            $ids = [];
-            foreach ($atrativosData as $item) {
-                $syncData[$item['id']] = [
-                    'ordem' => $item['ordem'],
-                    'tempo_estimado' => $item['tempo_estimado'],
-                    'observacao' => $item['observacao']
-                ];
-                $ids[] = $item['id'];
+            $ordem = 1;
+            foreach ($slugsAtrativos as $slugAtr) {
+                if (isset($atrativos[$slugAtr])) {
+                    $syncData[$atrativos[$slugAtr]] = [
+                        'ordem' => $ordem,
+                        'tempo_estimado' => 45 + ($ordem * 10),
+                        'observacao' => 'Parada recomendada para visitação completa e fotos.'
+                    ];
+                    $ordem++;
+                }
             }
 
-            $roteiro->atrativos()->sync($syncData);
-            $roteiro->update(['atrativos_ids' => $ids]);
+            if (!empty($syncData)) {
+                $roteiro->atrativos()->sync($syncData);
+            }
         }
     }
 }

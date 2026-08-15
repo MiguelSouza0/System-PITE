@@ -7,6 +7,9 @@
     <meta name="description" content="Plataforma de gestão pública orientada a dados para o turismo municipal.">
     <meta name="author" content="Prefeitura Municipal - System-PITE">
 
+    <!-- Favicon (Ícone no topo do navegador) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23047857'/%3E%3Cstop offset='100%25' stop-color='%230d9488'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23grad)'/%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%23f59e0b' stroke-width='4' stroke-dasharray='4 2'/%3E%3Cpolygon points='50,18 60,45 50,40' fill='%23ef4444'/%3E%3Cpolygon points='50,82 60,55 50,60' fill='%23f1f5f9'/%3E%3Cpolygon points='50,18 40,45 50,40' fill='%23f87171'/%3E%3Cpolygon points='50,82 40,55 50,60' fill='%23cbd5e1'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23f59e0b'/%3E%3C/svg%3E">
+
     <!-- Bootstrap 5 CSS & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -439,13 +442,16 @@
     <div class="a11y-bar">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
+                <span class="badge px-2 py-1 rounded-pill d-none d-sm-inline-flex align-items-center" style="background: rgba(245,158,11,0.2); color: #fef08a; font-weight:700; font-size:0.72rem;">
+                    <i class="bi bi-geo-alt-fill text-warning me-1"></i> João Pessoa - PB
+                </span>
                 <span><i class="bi bi-universal-access"></i> Acessibilidade:</span>
                 <a href="#" onclick="toggleHighContrast(); return false;"><i class="bi bi-circle-half"></i> Contraste</a>
                 <a href="#" onclick="changeFontSize(1); return false;"><i class="bi bi-zoom-in"></i> A+</a>
                 <a href="#" onclick="changeFontSize(-1); return false;"><i class="bi bi-zoom-out"></i> A-</a>
             </div>
             <div class="d-none d-md-block">
-                <span style="color:#10b981;"><i class="bi bi-patch-check-fill me-1"></i> Dados Oficiais Verificados</span>
+                <span style="color:#10b981;"><i class="bi bi-patch-check-fill me-1"></i> Portal Oficial de Turismo</span>
             </div>
         </div>
     </div>
@@ -454,8 +460,15 @@
     <nav class="navbar navbar-expand-lg navbar-pite sticky-top" id="mainNav">
         <div class="container d-flex align-items-center justify-content-between">
             <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ route('portal.home') }}">
-                <div class="brand-icon"><i class="bi bi-compass"></i></div>
-                <span class="brand-logo">System-PITE</span>
+                <div class="brand-icon shadow-sm" style="background: linear-gradient(135deg, var(--pite-emerald), var(--pite-teal)); box-shadow: 0 4px 12px rgba(4,120,87,0.3) !important;">
+                    <i class="bi bi-compass"></i>
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="brand-logo" style="line-height: 1.05;">System-PITE</span>
+                    <small class="text-uppercase fw-bold" style="font-size: 0.62rem; letter-spacing: 0.08em; color: var(--pite-emerald); line-height: 1;">
+                        <i class="bi bi-geo-alt-fill text-warning me-1"></i>João Pessoa · PB
+                    </small>
+                </div>
             </a>
 
             <!-- Ações do Topo: Perfil & Botão Hamburger (Responsivo para Celulares e Desktops) -->

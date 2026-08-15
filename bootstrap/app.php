@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'perfil' => \App\Http\Middleware\CheckPerfil::class,
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackSiteVisits::class,
+        ]);
         $middleware->validateCsrfTokens(except: [
             'api/*',
             'roteiros-inteligentes/gerar',

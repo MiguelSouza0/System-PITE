@@ -92,14 +92,31 @@
 <div class="container py-4">
 
     {{-- CARDS DE INDICADORES CHAVE (POLÍTICAS PÚBLICAS) --}}
-    <div class="row g-4 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
+    <div class="row g-3 mb-4">
+        {{-- Card de Visitação do Site --}}
+        <div class="col-6 col-md-4 col-xl">
+            <div class="stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small fw-semibold mb-1">Atrativos Cadastrados</p>
-                        <h3 class="fw-bold mb-0">{{ $stats['total_atrativos'] }}</h3>
-                        <small class="text-success"><i class="bi bi-check-circle me-1"></i>{{ $stats['atrativos_ativos'] }} ativos na rede</small>
+                        <p class="text-muted small fw-semibold mb-1" style="font-size:0.78rem;">Acessos ao Portal</p>
+                        <h3 class="fw-bold mb-0 text-dark">{{ number_format($stats['total_visitas_site'], 0, ',', '.') }}</h3>
+                        <small class="text-primary" style="font-size:0.75rem;">
+                            <i class="bi bi-eye me-1"></i>{{ $stats['visitas_hoje'] }} hoje · {{ $stats['visitantes_unicos'] }} únicos
+                        </small>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(14,165,233,0.12); color:#0284c7;">
+                        <i class="bi bi-globe2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl">
+            <div class="stat-card h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small fw-semibold mb-1" style="font-size:0.78rem;">Atrativos na Rede</p>
+                        <h3 class="fw-bold mb-0 text-dark">{{ $stats['total_atrativos'] }}</h3>
+                        <small class="text-success" style="font-size:0.75rem;"><i class="bi bi-check-circle me-1"></i>{{ $stats['atrativos_ativos'] }} homologados</small>
                     </div>
                     <div class="stat-icon" style="background:rgba(4,120,87,0.1); color:var(--pite-emerald);">
                         <i class="bi bi-compass"></i>
@@ -107,13 +124,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
+        <div class="col-6 col-md-4 col-xl">
+            <div class="stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small fw-semibold mb-1">Rede de Empreendedores</p>
-                        <h3 class="fw-bold mb-0">{{ $stats['total_empreendedores'] }}</h3>
-                        <small class="text-warning"><i class="bi bi-clock me-1"></i>{{ $stats['empreendedores_pendentes'] }} para homologação</small>
+                        <p class="text-muted small fw-semibold mb-1" style="font-size:0.78rem;">Empreendedores</p>
+                        <h3 class="fw-bold mb-0 text-dark">{{ $stats['total_empreendedores'] }}</h3>
+                        <small class="text-warning" style="font-size:0.75rem;"><i class="bi bi-clock me-1"></i>{{ $stats['empreendedores_pendentes'] }} pendentes</small>
                     </div>
                     <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--pite-gold);">
                         <i class="bi bi-shop"></i>
@@ -121,13 +138,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
+        <div class="col-6 col-md-6 col-xl">
+            <div class="stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small fw-semibold mb-1">Índice Acessibilidade</p>
-                        <h3 class="fw-bold mb-0">{{ $percentualAcessibilidade }}%</h3>
-                        <small class="text-primary"><i class="bi bi-universal-access me-1"></i>Infraestrutura PNE</small>
+                        <p class="text-muted small fw-semibold mb-1" style="font-size:0.78rem;">Acessibilidade</p>
+                        <h3 class="fw-bold mb-0 text-dark">{{ $percentualAcessibilidade }}%</h3>
+                        <small class="text-info" style="font-size:0.75rem;"><i class="bi bi-universal-access me-1"></i>Padrão PNE</small>
                     </div>
                     <div class="stat-icon" style="background:rgba(14,165,233,0.1); color:var(--pite-sky);">
                         <i class="bi bi-universal-access-circle"></i>
@@ -135,13 +152,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
+        <div class="col-6 col-md-6 col-xl">
+            <div class="stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small fw-semibold mb-1">Satisfação Turística</p>
-                        <h3 class="fw-bold mb-0">{{ $stats['media_avaliacoes'] }}/5</h3>
-                        <small class="text-success"><i class="bi bi-shield-check me-1"></i>{{ $stats['total_avaliacoes'] }} visitas auditadas</small>
+                        <p class="text-muted small fw-semibold mb-1" style="font-size:0.78rem;">Satisfação Turística</p>
+                        <h3 class="fw-bold mb-0 text-dark">{{ $stats['media_avaliacoes'] }}/5</h3>
+                        <small class="text-success" style="font-size:0.75rem;"><i class="bi bi-shield-check me-1"></i>{{ $stats['total_avaliacoes'] }} avaliações</small>
                     </div>
                     <div class="stat-icon" style="background:rgba(124,58,237,0.1); color:var(--pite-violet);">
                         <i class="bi bi-star-half"></i>
@@ -150,6 +167,239 @@
             </div>
         </div>
     </div>
+
+    {{-- SEÇÃO ANALYTICS: VISITAÇÃO E RECORRÊNCIA AO SITE --}}
+    @if(isset($metricasVisitasRecorrencia))
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 mb-1 fw-semibold">
+                    <i class="bi bi-graph-up me-1"></i> Inteligência Digital & Tráfego
+                </span>
+                <h5 class="fw-bold mb-0 text-dark" style="font-family:'Outfit';">
+                    <i class="bi bi-activity text-primary me-2"></i>Visitação, Retenção & Recorrência ao Portal
+                </h5>
+                <small class="text-muted">Métricas de engajamento do visitante em conformidade com a LGPD (dados anonimizados)</small>
+            </div>
+            <div class="d-flex gap-2 align-items-center mt-2 mt-md-0">
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                    <i class="bi bi-shield-check me-1"></i> Taxa de Retorno: <strong>{{ $metricasVisitasRecorrencia['taxa_retorno'] }}%</strong>
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Total de Acessos</small>
+                    <h4 class="fw-bold text-dark mb-0">{{ number_format($metricasVisitasRecorrencia['total_acessos'], 0, ',', '.') }}</h4>
+                    <small class="text-success" style="font-size:0.72rem;">+{{ $metricasVisitasRecorrencia['visitas_hoje'] }} hoje</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Visitantes Únicos</small>
+                    <h4 class="fw-bold text-primary mb-0">{{ number_format($metricasVisitasRecorrencia['visitantes_unicos'], 0, ',', '.') }}</h4>
+                    <small class="text-muted" style="font-size:0.72rem;">IPs únicos</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Usuários Recorrentes</small>
+                    <h4 class="fw-bold text-success mb-0">{{ number_format($metricasVisitasRecorrencia['usuarios_recorrentes'], 0, ',', '.') }}</h4>
+                    <small class="text-success" style="font-size:0.72rem;">Fidelizados</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Tempo Médio</small>
+                    <h4 class="fw-bold text-dark mb-0">{{ $metricasVisitasRecorrencia['tempo_medio_navegacao'] }}</h4>
+                    <small class="text-muted" style="font-size:0.72rem;">Por sessão</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Taxa de Retorno</small>
+                    <h4 class="fw-bold text-info mb-0">{{ $metricasVisitasRecorrencia['taxa_retorno'] }}%</h4>
+                    <small class="text-muted" style="font-size:0.72rem;">Voltam ao site</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded-3 bg-light border text-center h-100">
+                    <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size:0.7rem;">Dispositivos</small>
+                    <div class="d-flex justify-content-around text-muted small mt-1" style="font-size:0.75rem;">
+                        <span title="Mobile"><i class="bi bi-phone text-primary"></i> {{ $metricasVisitasRecorrencia['dispositivos']['mobile'] }}%</span>
+                        <span title="Desktop"><i class="bi bi-laptop text-dark"></i> {{ $metricasVisitasRecorrencia['dispositivos']['desktop'] }}%</span>
+                    </div>
+                    <small class="text-muted" style="font-size:0.7rem;">Mobile First</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- SEÇÃO ANALYTICS: ACESSOS POR FUNCIONALIDADES, ROTEIROS, ATRATIVOS E SERVIÇOS --}}
+    @if(isset($funcionalidadesAcessos))
+    <div class="row g-4 mb-4">
+        {{-- 1. Páginas Mais Visitadas --}}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
+                            <i class="bi bi-window-sidebar text-primary me-2"></i>Páginas Mais Visitadas
+                        </h6>
+                        <small class="text-muted">Seções com maior fluxo de navegação pública</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">Top 5</span>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach($funcionalidadesAcessos['paginas_mais_visitadas'] as $pag)
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-semibold text-dark">
+                                <i class="bi {{ $pag['icone'] }} me-2" style="color:{{ $pag['cor'] }};"></i>{{ $pag['nome'] }}
+                                <code class="text-muted ms-1" style="font-size:0.7rem;">{{ $pag['url'] }}</code>
+                            </span>
+                            <span class="small fw-bold text-dark">{{ $pag['visitas'] }} <small class="text-muted fw-normal">({{ $pag['pct'] }}%)</small></span>
+                        </div>
+                        <div class="progress" style="height:6px; border-radius:10px;">
+                            <div class="progress-bar" style="width:{{ $pag['pct'] }}%; background-color:{{ $pag['cor'] }};"></div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- 2. Serviços Locais com Maior Interesse --}}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
+                            <i class="bi bi-shop text-warning me-2"></i>Serviços Locais de Maior Interesse
+                        </h6>
+                        <small class="text-muted">Demanda dos turistas pela cadeia produtiva do município</small>
+                    </div>
+                    <span class="badge bg-warning-subtle text-warning-emphasis">Comércio Local</span>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach($funcionalidadesAcessos['servicos_locais_interesse'] as $srv)
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-semibold text-dark">
+                                <i class="bi {{ $srv['icone'] }} me-2" style="color:{{ $srv['cor'] }};"></i>{{ $srv['ramo'] }}
+                            </span>
+                            <span class="small fw-bold text-dark">
+                                {{ $srv['interesse_pct'] }}% de busca
+                                <span class="badge bg-light text-muted border ms-1" style="font-size:0.68rem;">{{ $srv['estabelecimentos'] }} credenciados</span>
+                            </span>
+                        </div>
+                        <div class="progress" style="height:6px; border-radius:10px;">
+                            <div class="progress-bar" style="width:{{ $srv['interesse_pct'] }}%; background-color:{{ $srv['cor'] }};"></div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        {{-- 3. Roteiros Mais Consultados --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
+                            <i class="bi bi-signpost-split text-info me-2"></i>Roteiros Mais Consultados
+                        </h6>
+                        <small class="text-muted">Itinerários inteligentes mais acessados</small>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach($funcionalidadesAcessos['roteiros_mais_consultados'] as $rot)
+                    <div class="p-2 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong class="small d-block text-dark">{{ $rot['titulo'] }}</strong>
+                            <span class="badge bg-primary-subtle text-primary" style="font-size:0.68rem;">{{ $rot['consultas'] }} consultas</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center mt-1" style="font-size:0.72rem;">
+                            <span class="text-muted"><i class="bi bi-clock me-1"></i>{{ $rot['duracao'] }}</span>
+                            <span class="text-muted">· {{ $rot['dificuldade'] }}</span>
+                            <span class="text-success ms-auto"><i class="bi bi-cloud-arrow-down me-1"></i>{{ $rot['downloads_offline'] }} offline</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- 4. Atrativos Mais Acessados --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
+                            <i class="bi bi-compass text-success me-2"></i>Atrativos Mais Acessados
+                        </h6>
+                        <small class="text-muted">Pontos turísticos com maior interesse</small>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach($funcionalidadesAcessos['atrativos_mais_acessados'] as $atr)
+                    <div class="p-2 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong class="small d-block text-dark">{{ $atr['nome'] }}</strong>
+                            <span class="badge bg-success-subtle text-success" style="font-size:0.68rem;">{{ $atr['acessos'] }} acessos</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center mt-1" style="font-size:0.72rem;">
+                            <span class="text-muted"><i class="bi bi-tag me-1"></i>{{ $atr['categoria'] }}</span>
+                            <span class="text-warning"><i class="bi bi-star-fill me-1"></i>{{ $atr['nota'] }}</span>
+                            @if($atr['acessivel'])
+                                <span class="badge bg-info-subtle text-info ms-auto" style="font-size:0.65rem;"><i class="bi bi-universal-access me-1"></i>PNE</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- 5. Eventos Mais Pesquisados --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-family:'Outfit';">
+                            <i class="bi bi-calendar-event text-danger me-2"></i>Eventos Mais Pesquisados
+                        </h6>
+                        <small class="text-muted">Festividades e eventos municipais</small>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach($funcionalidadesAcessos['eventos_mais_pesquisados'] as $eve)
+                    <div class="p-2 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong class="small d-block text-dark">{{ $eve['titulo'] }}</strong>
+                            <span class="badge bg-danger-subtle text-danger" style="font-size:0.68rem;">{{ $eve['pesquisas'] }} buscas</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center mt-1" style="font-size:0.72rem;">
+                            <span class="text-muted"><i class="bi bi-pin-map me-1"></i>{{ $eve['local'] }}</span>
+                            @if($eve['gratuito'])
+                                <span class="badge bg-success-subtle text-success ms-auto" style="font-size:0.65rem;">Gratuito</span>
+                            @else
+                                <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size:0.65rem;">Ingresso</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- BLOCO 1: COMPREENDER O TURISMO (SAZONALIDADE, FLUXO E ORIGEM) --}}
     <div class="row g-4 mb-4">

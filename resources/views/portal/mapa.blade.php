@@ -204,8 +204,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const focusEventoId = urlParams.get('evento') ? parseInt(urlParams.get('evento')) : null;
     const hasFocus = !isNaN(focusLat) && !isNaN(focusLng);
 
-    const initialLat = hasFocus ? focusLat : -22.735;
-    const initialLng = hasFocus ? focusLng : -45.593;
+    const initialLat = hasFocus ? focusLat : -7.115;
+    const initialLng = hasFocus ? focusLng : -34.845;
     const initialZoom = hasFocus ? 17 : 13;
 
     const map = L.map('mapa-turismo').setView([initialLat, initialLng], initialZoom);

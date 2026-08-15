@@ -94,14 +94,29 @@
 </div>
 
 <div class="container" style="margin-top:-36px; position:relative; z-index:2;">
-    <!-- KPIs -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-3" data-animate>
+      {{-- KPIs Principais --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl" data-animate>
+            <div class="kpi-card kpi-sky">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="small fw-semibold text-muted text-uppercase mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">Acessos ao Portal</p>
+                        <div class="kpi-value" style="color:var(--pite-sky);">{{ number_format($stats['total_visitas_site'] ?? 0, 0, ',', '.') }}</div>
+                        <small class="text-primary" style="font-size:0.75rem;"><i class="bi bi-eye me-1"></i>{{ $stats['visitas_hoje'] ?? 0 }} hoje</small>
+                    </div>
+                    <div class="icon-box" style="background:rgba(14,165,233,0.08); color:var(--pite-sky); width:44px; height:44px; font-size:1.1rem;">
+                        <i class="bi bi-globe2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl" data-animate>
             <div class="kpi-card kpi-emerald">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="small fw-semibold text-muted text-uppercase mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">Atrativos Ativos</p>
                         <div class="kpi-value" style="color:var(--pite-emerald);">{{ $stats['total_atrativos'] ?? 0 }}</div>
+                        <small class="text-success" style="font-size:0.75rem;"><i class="bi bi-check-circle me-1"></i>{{ $stats['atrativos_ativos'] ?? 0 }} online</small>
                     </div>
                     <div class="icon-box" style="background:rgba(4,120,87,0.08); color:var(--pite-emerald); width:44px; height:44px; font-size:1.1rem;">
                         <i class="bi bi-geo-alt"></i>
@@ -109,12 +124,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3" data-animate>
+        <div class="col-6 col-md-4 col-xl" data-animate>
             <div class="kpi-card kpi-sky">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="small fw-semibold text-muted text-uppercase mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">Empreendedores</p>
                         <div class="kpi-value" style="color:var(--pite-sky);">{{ $stats['total_empreendedores'] ?? 0 }}</div>
+                        <small class="text-info" style="font-size:0.75rem;"><i class="bi bi-shop me-1"></i>{{ $stats['empreendedores_aprovados'] ?? 0 }} com selo</small>
                     </div>
                     <div class="icon-box" style="background:rgba(14,165,233,0.08); color:var(--pite-sky); width:44px; height:44px; font-size:1.1rem;">
                         <i class="bi bi-shop"></i>
@@ -122,12 +138,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3" data-animate>
+        <div class="col-6 col-md-6 col-xl" data-animate>
             <div class="kpi-card kpi-gold">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="small fw-semibold text-muted text-uppercase mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">Pendentes</p>
                         <div class="kpi-value" style="color:var(--pite-gold);">{{ $stats['empreendedores_pendentes'] ?? 0 }}</div>
+                        <small class="text-warning" style="font-size:0.75rem;"><i class="bi bi-clock me-1"></i>Para homologação</small>
                     </div>
                     <div class="icon-box" style="background:rgba(245,158,11,0.08); color:var(--pite-gold); width:44px; height:44px; font-size:1.1rem;">
                         <i class="bi bi-clock-history"></i>
@@ -135,12 +152,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3" data-animate>
+        <div class="col-6 col-md-6 col-xl" data-animate>
             <div class="kpi-card kpi-coral">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="small fw-semibold text-muted text-uppercase mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">Eventos</p>
                         <div class="kpi-value" style="color:var(--pite-coral);">{{ $stats['total_eventos'] ?? 0 }}</div>
+                        <small class="text-danger" style="font-size:0.75rem;"><i class="bi bi-calendar-check me-1"></i>{{ $stats['eventos_ativos'] ?? 0 }} ativos</small>
                     </div>
                     <div class="icon-box" style="background:rgba(244,63,94,0.08); color:var(--pite-coral); width:44px; height:44px; font-size:1.1rem;">
                         <i class="bi bi-calendar-event"></i>

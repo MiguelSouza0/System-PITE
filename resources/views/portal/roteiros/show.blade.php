@@ -532,8 +532,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (atrativosData.length === 0) return;
 
     // 1. Inicialização do Mapa Leaflet
-    const defaultLat = atrativosData[0].lat || -22.7394;
-    const defaultLng = atrativosData[0].lng || -45.5913;
+    const defaultLat = atrativosData[0].lat || -7.115;
+    const defaultLng = atrativosData[0].lng || -34.845;
 
     const map = L.map('mapa-roteiro').setView([defaultLat, defaultLng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
