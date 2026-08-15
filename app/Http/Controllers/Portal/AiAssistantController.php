@@ -192,6 +192,10 @@ class AiAssistantController extends Controller
     public function detalharPlano(int $id, Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Não autenticado.'], 401);
+        }
+
         $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
 
         return response()->json([
@@ -207,6 +211,10 @@ class AiAssistantController extends Controller
     public function atualizarPlano(int $id, Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Não autenticado.'], 401);
+        }
+
         $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
 
         $request->validate([
@@ -231,6 +239,10 @@ class AiAssistantController extends Controller
     public function excluirPlano(int $id, Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Não autenticado.'], 401);
+        }
+
         $plano = AiPlanoTurismo::doUsuario($user->id)->findOrFail($id);
         $plano->delete();
 

@@ -1336,17 +1336,18 @@
 
             // Card de Plano de Turismo da IA (com Ação de Salvar)
             let planoCardHtml = '';
-            if (dados.dados_extras && dados.dados_extras.plano_turismo) {
-                const p = dados.dados_extras.plano_turismo;
+            const p = dados.dados_extras?.plano || dados.dados_extras?.plano_turismo;
+            if (p && p.titulo && p.dias) {
                 const planoJsonEncoded = encodeURIComponent(JSON.stringify(p));
+                const btnId = 'btn-salvar-plano-' + Math.random().toString(36).substring(2, 8);
                 planoCardHtml = `
-                    <div class="mt-3 p-3 rounded-4 border" style="background: linear-gradient(135deg, rgba(4,120,87,0.05), rgba(13,148,136,0.1)); border-color: rgba(4,120,87,0.2) !important;">
+                    <div class="mt-3 p-3 rounded-4 border" style="background: linear-gradient(135deg, rgba(4,120,87,0.06), rgba(13,148,136,0.12)); border-color: rgba(4,120,87,0.25) !important;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-journal-bookmark-fill me-1"></i> ${p.dias} Dia(s)</span>
+                            <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-journal-bookmark-fill me-1"></i> ${p.dias} ${p.dias == 1 ? 'Dia' : 'Dias'}</span>
                             <span class="fw-bold small text-dark">${p.titulo}</span>
                         </div>
-                        <p class="small text-muted mb-2" style="font-size:0.75rem;">${p.descricao}</p>
-                        <button class="btn btn-sm btn-pite w-100 rounded-3 py-2 fw-semibold shadow-sm" onclick="salvarPlanoIa('${planoJsonEncoded}')">
+                        <p class="small text-muted mb-2" style="font-size:0.75rem;">${p.descricao || 'Roteiro personalizado pelo Guia IA.'}</p>
+                        <button id="${btnId}" class="btn btn-sm btn-pite w-100 rounded-3 py-2 fw-semibold shadow-sm" onclick="salvarPlanoIa('${planoJsonEncoded}', '${btnId}')">
                             <i class="bi bi-bookmark-star-fill me-1"></i> Salvar este Roteiro no Meu Painel
                         </button>
                     </div>
@@ -1381,9 +1382,15 @@
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
-        window.salvarPlanoIa = function(encodedJson) {
+        window.salvarPlanoIa = function(encodedJson, btnId) {
             try {
                 const plano = JSON.parse(decodeURIComponent(encodedJson));
+                const btn = btnId ? document.getElementById(btnId) : null;
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Salvando...';
+                }
+
                 fetch('{{ route("api.ia.planos.store") }}', {
                     method: 'POST',
                     headers: {
@@ -1396,11 +1403,16 @@
                         descricao: plano.descricao,
                         dias: plano.dias,
                         itens: plano.itens,
+                        preferencias: plano.preferencias || null,
                         sessao_chat_id: aiSessaoId
                     })
                 })
                 .then(r => {
                     if (r.status === 401) {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-bookmark-star-fill me-1"></i> Salvar este Roteiro no Meu Painel';
+                        }
                         alert('Para salvar este plano de turismo no seu painel, faça login como Turista!');
                         window.location.href = '{{ route("turista.login") }}';
                         return null;
@@ -1409,7 +1421,24 @@
                 })
                 .then(res => {
                     if (res && res.sucesso) {
-                        alert('🎉 Plano de viagem salvo com sucesso! Você pode visualizá-lo e editá-lo no seu Painel de Turista.');
+                        if (btn) {
+                            btn.className = 'btn btn-sm btn-success w-100 rounded-3 py-2 fw-semibold shadow-sm';
+                            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Plano Salvo no Painel! <a href="{{ route("turista.planos") }}" class="text-white text-decoration-underline ms-1">Ver Meus Planos</a>';
+                        }
+                        alert('🎉 Plano de turismo salvo com sucesso no seu Painel de Turista!');
+                    } else if (res && !res.sucesso) {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-bookmark-star-fill me-1"></i> Salvar este Roteiro no Meu Painel';
+                        }
+                        alert(res.mensagem || 'Não foi possível salvar o plano.');
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro na requisição:", err);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-bookmark-star-fill me-1"></i> Salvar este Roteiro no Meu Painel';
                     }
                 });
             } catch(e) {

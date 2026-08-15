@@ -54,15 +54,21 @@ class AiPlanoTurismo extends Model
      */
     public function itensPorDia(): array
     {
+        $rawItens = $this->itens;
+        if (is_string($rawItens)) {
+            $rawItens = json_decode($rawItens, true) ?? [];
+        }
+
         $agrupados = [];
-        foreach ($this->itens ?? [] as $item) {
-            $dia = $item['dia'] ?? 1;
-            $agrupados[$dia][] = $item;
+        foreach ($rawItens ?? [] as $item) {
+            $itemArr = (array) $item;
+            $dia = (int) ($itemArr['dia'] ?? 1);
+            $agrupados[$dia][] = $itemArr;
         }
 
         // Ordenar itens dentro de cada dia
         foreach ($agrupados as &$itens) {
-            usort($itens, fn($a, $b) => ($a['ordem'] ?? 0) <=> ($b['ordem'] ?? 0));
+            usort($itens, fn($a, $b) => ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0)));
         }
 
         ksort($agrupados);

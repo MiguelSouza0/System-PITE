@@ -338,7 +338,9 @@ class AiItineraryService
 
         // 1. Identificação de Intenção
         $intencao = 'geral';
-        if (preg_match('/(cria|crie|gerar|gera|montar|monte|faça|faca|construa|montagem) (um |o )?(plano|roteiro|itinerario|itinerário)/i', $perguntaLimpa) || preg_match('/(plano|roteiro|itinerario|itinerário) (personalizado|sob medida|de \d+ dia)/i', $perguntaLimpa)) {
+        if (preg_match('/(cria|crie|gerar|gera|montar|monte|faça|faca|fazer|construa|montagem|quero|sugira|elabore|planeje|planejar|organize|organizar) (um |o )?(plano|roteiro|itinerario|itinerário)/i', $perguntaLimpa) 
+            || preg_match('/(plano|roteiro|itinerario|itinerário) (de turismo|turístico|turistico|personalizado|sob medida|de \d+ dia|\d+ dia)/i', $perguntaLimpa)
+            || preg_match('/(plano de turismo|planos de turismo|planejar viagem|planejar passeio)/i', $perguntaLimpa)) {
             $intencao = 'criar_plano_turismo';
         } elseif (preg_match('/(mude|muda|altere|altera|edite|edita|troque|troca|substitua|modifique|modifica) (o|meu|este|no)? (plano|roteiro|dia|passeio|item|atrativo)/i', $perguntaLimpa)) {
             $intencao = 'editar_plano_turismo';
@@ -404,6 +406,19 @@ class AiItineraryService
                     $atrativosQuery = Atrativo::with('categoria')->where('ativo', true)->get();
                 }
 
+                if ($atrativosQuery->isEmpty()) {
+                    // Fallback caso o banco esteja em inicialização
+                    $fallbackAtrativos = [
+                        (object) ['id' => 1, 'nome' => 'Centro Cultural São Francisco', 'categoria' => (object) ['nome' => 'Patrimônio Histórico']],
+                        (object) ['id' => 2, 'nome' => 'Farol do Cabo Branco e Ponta do Seixas', 'categoria' => (object) ['nome' => 'Monumento & Natureza']],
+                        (object) ['id' => 3, 'nome' => 'Praia de Tambaú e Piscinas Naturais de Picãozinho', 'categoria' => (object) ['nome' => 'Praias & Ecoturismo']],
+                        (object) ['id' => 4, 'nome' => 'Mercado de Artesanato Paraibano (MAP)', 'categoria' => (object) ['nome' => 'Cultura & Compras']],
+                        (object) ['id' => 5, 'nome' => 'Pôr do Sol no Jacaré ao som do Bolero de Ravel', 'categoria' => (object) ['nome' => 'Contemplação & Lazer']],
+                        (object) ['id' => 6, 'nome' => 'Parque da Lagoa Solon de Lucena', 'categoria' => (object) ['nome' => 'Parque Urbano']],
+                    ];
+                    $atrativosQuery = collect($fallbackAtrativos);
+                }
+
                 $eventosQuery = Evento::visivelPortal()->where(function($q) {
                     $q->whereNull('data_fim')->orWhere('data_fim', '>=', now());
                 })->get();
@@ -418,7 +433,7 @@ class AiItineraryService
                                 $score += 10;
                             }
                         }
-                        if ($at->destaque) $score += 5;
+                        if (!empty($at->destaque)) $score += 5;
                         return $score;
                     })->values();
                 }
@@ -435,11 +450,15 @@ class AiItineraryService
                         'dia' => $d,
                         'ordem' => 1,
                         'periodo' => 'Manhã (08:30)',
+                        'horario' => '08:30 - Manhã',
                         'tipo' => 'atrativo',
-                        'item_id' => $atManha->id,
+                        'item_id' => $atManha->id ?? 1,
                         'nome' => $atManha->nome,
-                        'categoria' => $atManha->categoria?->nome ?? 'Atrativo',
-                        'notas' => 'Exploração matutina e registro fotográfico.'
+                        'atrativo' => $atManha->nome,
+                        'titulo' => $atManha->nome,
+                        'categoria' => $atManha->categoria?->nome ?? 'Atrativo Turístico',
+                        'notas' => 'Exploração matutina e registro fotográfico.',
+                        'descricao' => 'Exploração matutina e registro fotográfico.'
                     ];
 
                     // Tarde
@@ -449,11 +468,15 @@ class AiItineraryService
                         'dia' => $d,
                         'ordem' => 2,
                         'periodo' => 'Tarde (14:30)',
+                        'horario' => '14:30 - Tarde',
                         'tipo' => 'atrativo',
-                        'item_id' => $atTarde->id,
+                        'item_id' => $atTarde->id ?? 2,
                         'nome' => $atTarde->nome,
-                        'categoria' => $atTarde->categoria?->nome ?? 'Atrativo',
-                        'notas' => 'Passeio cultural / contemplação.'
+                        'atrativo' => $atTarde->nome,
+                        'titulo' => $atTarde->nome,
+                        'categoria' => $atTarde->categoria?->nome ?? 'Atrativo Turístico',
+                        'notas' => 'Passeio cultural e contemplação.',
+                        'descricao' => 'Passeio cultural e contemplação.'
                     ];
 
                     // Noite
@@ -463,11 +486,15 @@ class AiItineraryService
                             'dia' => $d,
                             'ordem' => 3,
                             'periodo' => 'Noite (19:30)',
+                            'horario' => '19:30 - Noite',
                             'tipo' => 'evento',
                             'item_id' => $ev->id,
                             'nome' => $ev->titulo,
+                            'atrativo' => $ev->titulo,
+                            'titulo' => $ev->titulo,
                             'categoria' => 'Evento Cultural / Festividade',
-                            'notas' => "Local: " . ($ev->local ?? 'João Pessoa')
+                            'notas' => "Local: " . ($ev->local ?? 'João Pessoa'),
+                            'descricao' => "Local: " . ($ev->local ?? 'João Pessoa')
                         ];
                     } else {
                         $atNoite = $atrativosQuery[$indexAtrativo % $totalAtrativos];
@@ -476,11 +503,15 @@ class AiItineraryService
                             'dia' => $d,
                             'ordem' => 3,
                             'periodo' => 'Noite (20:00)',
+                            'horario' => '20:00 - Noite',
                             'tipo' => 'atrativo',
-                            'item_id' => $atNoite->id,
+                            'item_id' => $atNoite->id ?? 3,
                             'nome' => $atNoite->nome,
+                            'atrativo' => $atNoite->nome,
+                            'titulo' => $atNoite->nome,
                             'categoria' => $atNoite->categoria?->nome ?? 'Gastronomia / Lazer',
-                            'notas' => 'Jantar regional e entretenimento.'
+                            'notas' => 'Jantar regional e entretenimento.',
+                            'descricao' => 'Jantar regional e entretenimento.'
                         ];
                     }
                 }
@@ -489,18 +520,21 @@ class AiItineraryService
                 $tituloPlano = ($isEdicao ? "Plano Atualizado" : "Plano Personalizado") . " - {$dias} " . ($dias > 1 ? "Dias" : "Dia") . " em João Pessoa";
                 $descPlano = "Roteiro turístico sob medida gerado pelo Guia PITE IA com atrações oficiais e eventos recomendados.";
 
+                $planoPayload = [
+                    'titulo' => $tituloPlano,
+                    'descricao' => $descPlano,
+                    'dias' => $dias,
+                    'itens' => $itensPlano,
+                    'preferencias' => [
+                        'perfil' => $user->perfil ?? 'turista',
+                        'dias' => $dias,
+                    ]
+                ];
+
                 $dadosExtras = [
                     'tipo_acao' => 'plano_turismo_gerado',
-                    'plano' => [
-                        'titulo' => $tituloPlano,
-                        'descricao' => $descPlano,
-                        'dias' => $dias,
-                        'itens' => $itensPlano,
-                        'preferencias' => [
-                            'perfil' => $user->perfil ?? 'turista',
-                            'dias' => $dias,
-                        ]
-                    ]
+                    'plano' => $planoPayload,
+                    'plano_turismo' => $planoPayload
                 ];
 
                 $headerTxt = $isEdicao ? "✨ **Plano Atualizado!**\n\n" : "🗺️ **" . $tituloPlano . "**\n\n";
@@ -517,7 +551,7 @@ class AiItineraryService
                     $respostaText .= "\n";
                 }
 
-                $respostaText .= "💡 *Você pode me pedir para ajustar qualquer dia (ex: 'mude o dia 2 para praias') ou clicar em **Salvar Plano** para armazená-lo na sua conta!*";
+                $respostaText .= "💡 *Você pode me pedir para ajustar qualquer dia (ex: 'mude o dia 2 para praias') ou clicar em **Salvar Roteiro** para armazená-lo no seu Painel de Turista!*";
 
                 $resposta = $respostaText;
                 $sugestoes = [

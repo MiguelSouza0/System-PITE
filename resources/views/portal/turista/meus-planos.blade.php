@@ -162,20 +162,26 @@
                                             <div class="dia-dot"></div>
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="fw-bold small text-emerald" style="color: var(--pite-emerald);">
-                                                    <i class="bi bi-clock me-1"></i> {{ $item['horario'] ?? 'Atividade' }}
+                                                    <i class="bi bi-clock me-1"></i> {{ $item['periodo'] ?? $item['horario'] ?? 'Atividade' }}
                                                 </span>
-                                                @if(isset($item['valor']))
+                                                @if(!empty($item['categoria']))
+                                                <span class="badge bg-light text-dark border" style="font-size:0.75rem;">
+                                                    {{ $item['categoria'] }}
+                                                </span>
+                                                @elseif(isset($item['valor']))
                                                 <span class="badge bg-light text-dark border">
                                                     {{ $item['valor'] }}
                                                 </span>
                                                 @endif
                                             </div>
-                                            <div class="fw-semibold text-dark mb-1" style="font-size: 0.9rem;">
-                                                {{ $item['atrativo'] ?? $item['titulo'] ?? 'Ponto Turístico' }}
+                                            <div class="fw-semibold text-dark mb-1" style="font-size: 0.95rem;">
+                                                <i class="bi bi-geo-alt-fill text-danger me-1 small"></i>
+                                                {{ $item['nome'] ?? $item['atrativo'] ?? $item['titulo'] ?? 'Ponto Turístico' }}
                                             </div>
-                                            @if(isset($item['descricao']))
-                                            <p class="small text-muted mb-0" style="font-size: 0.82rem; line-height: 1.4;">
-                                                {{ $item['descricao'] }}
+                                            @php $nota = $item['notas'] ?? $item['descricao'] ?? null; @endphp
+                                            @if($nota)
+                                            <p class="small text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+                                                {{ $nota }}
                                             </p>
                                             @endif
                                         </div>
@@ -187,7 +193,7 @@
                         @endforeach
                     </div>
                     @else
-                    <p class="text-muted small mb-3">Roteiro personalizado sem detalhamento de dias especificou.</p>
+                    <p class="text-muted small mb-3">Roteiro personalizado salvo na conta.</p>
                     @endif
 
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
@@ -226,10 +232,12 @@ async function excluirPlano(planoId) {
     if (!confirm('Deseja realmente excluir este plano de turismo?')) return;
 
     try {
+        const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const token = tokenMeta ? tokenMeta.getAttribute('content') : '{{ csrf_token() }}';
         const response = await fetch(`/api/ia/planos/${planoId}`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-TOKEN': token,
                 'Accept': 'application/json'
             }
         });
@@ -240,10 +248,16 @@ async function excluirPlano(planoId) {
                 card.style.transition = 'all 0.3s ease';
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.9)';
-                setTimeout(() => card.remove(), 300);
+                setTimeout(() => {
+                    card.remove();
+                    const container = document.getElementById('listaPlanosContainer');
+                    if (container && container.querySelectorAll('.col-lg-6').length === 0) {
+                        location.reload();
+                    }
+                }, 300);
             }
         } else {
-            alert(res.erro || 'Erro ao excluir o plano.');
+            alert(res.mensagem || res.erro || 'Erro ao excluir o plano.');
         }
     } catch (e) {
         console.error(e);
