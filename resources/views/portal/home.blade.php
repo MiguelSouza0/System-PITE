@@ -296,6 +296,82 @@
     </div>
 </section>
 
+<!-- ═══ SEÇÃO PERSONALIZADA DO TURISTA ═══ -->
+@auth
+    @if(auth()->user()->isTurista())
+    <section class="py-5" style="background: linear-gradient(135deg, rgba(4,120,87,0.03), rgba(14,165,233,0.03));" data-animate>
+        <div class="container py-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <div>
+                    <div class="chip chip-gold mb-2"><i class="bi bi-person-check"></i> Sua Jornada</div>
+                    <h2 class="section-title" style="font-size: 2rem;">Continue explorando, {{ explode(' ', auth()->user()->name)[0] }}!</h2>
+                    <p class="section-subtitle">Sugestões baseadas nos seus interesses e histórico</p>
+                </div>
+                <a href="{{ route('turista.dashboard') }}" class="btn btn-pite">
+                    <i class="bi bi-grid-1x2 me-1"></i> Meu Painel
+                </a>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ route('turista.favoritos') }}" class="text-decoration-none d-block h-100">
+                        <div class="card-premium p-4 h-100 text-center">
+                            <div class="icon-box mx-auto mb-3" style="background: rgba(244,63,94,0.08); color: var(--pite-coral);">
+                                <i class="bi bi-heart-fill"></i>
+                            </div>
+                            <h6 style="font-family:'Outfit'; font-weight:700;">Meus Favoritos</h6>
+                            <p class="small text-muted mb-0">Veja os atrativos e eventos que você salvou</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ route('turista.historico') }}" class="text-decoration-none d-block h-100">
+                        <div class="card-premium p-4 h-100 text-center">
+                            <div class="icon-box mx-auto mb-3" style="background: rgba(14,165,233,0.08); color: var(--pite-sky);">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <h6 style="font-family:'Outfit'; font-weight:700;">Meu Histórico</h6>
+                            <p class="small text-muted mb-0">Reveja todos os lugares que você visitou</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ route('portal.roteiros') }}" class="text-decoration-none d-block h-100">
+                        <div class="card-premium p-4 h-100 text-center">
+                            <div class="icon-box mx-auto mb-3" style="background: rgba(124,58,237,0.08); color: var(--pite-violet);">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <h6 style="font-family:'Outfit'; font-weight:700;">Criar Roteiro IA</h6>
+                            <p class="small text-muted mb-0">Gere um roteiro personalizado para seus interesses</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
+@else
+<section class="py-5" style="background: linear-gradient(135deg, #022c22, #064e3b);" data-animate>
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8 text-white">
+                <div class="chip mb-3" style="background: rgba(245,158,11,0.15); color: #fbbf24;">
+                    <i class="bi bi-person-plus"></i> Cadastro Gratuito
+                </div>
+                <h2 class="section-title" style="font-size: 2rem;">Crie seu perfil e personalize sua experiência</h2>
+                <p style="color: rgba(255,255,255,0.7); max-width: 500px; line-height: 1.7;">
+                    Salve favoritos, registre visitas, avalie experiências e receba recomendações personalizadas por inteligência artificial.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{{ route('turista.registro') }}" class="btn btn-pite-gold btn-lg">
+                    <i class="bi bi-rocket-takeoff me-2"></i> Criar Minha Conta
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+@endauth
+
 <!-- ═══ FUNCIONALIDADES ═══ -->
 <section class="py-5" style="background:#fff;" data-animate>
     <div class="container py-4">

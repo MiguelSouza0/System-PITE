@@ -44,5 +44,28 @@ class UserSeeder extends Seeder
                 'ativo' => true
             ]
         );
+
+        // Turista de demonstração (acesso rápido)
+        $perfilTurista = Perfil::where('slug', 'turista')->first();
+
+        User::updateOrCreate(
+            ['email' => 'turista@email.com'],
+            [
+                'name' => 'Maria Silva',
+                'password' => Hash::make('SenhaPITE2026!'),
+                'perfil_id' => $perfilTurista?->id,
+                'ativo' => true,
+                'nacionalidade' => 'Brasileira',
+                'cep' => '01310-100',
+                'cidade_origem' => 'São Paulo',
+                'estado_origem' => 'SP',
+                'pais_origem' => 'Brasil',
+                'possui_conjuge' => true,
+                'possui_filhos' => true,
+                'quantidade_filhos' => 2,
+                'interesses' => ['natureza', 'gastronomia', 'cultural', 'historia', 'familia'],
+                'necessidades_especiais' => [],
+            ]
+        );
     }
 }

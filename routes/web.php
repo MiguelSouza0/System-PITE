@@ -47,6 +47,27 @@ Route::get('/esg-transparencia', function () {
     return view('portal.esg');
 })->name('portal.esg');
 
+// --- AUTENTICAÇÃO DO TURISTA ---
+use App\Http\Controllers\Portal\TuristaAuthController;
+use App\Http\Controllers\Portal\TuristaDashboardController;
+
+Route::get('/turista/registro', [TuristaAuthController::class, 'showRegistro'])->name('turista.registro');
+Route::post('/turista/registro', [TuristaAuthController::class, 'registro']);
+Route::get('/turista/login', [TuristaAuthController::class, 'showLogin'])->name('turista.login');
+Route::post('/turista/login', [TuristaAuthController::class, 'login']);
+
+// --- PAINEL DO TURISTA (autenticado) ---
+Route::middleware(['auth', 'perfil:turista'])->prefix('turista')->name('turista.')->group(function () {
+    Route::get('/dashboard', [TuristaDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/perfil', [TuristaDashboardController::class, 'perfil'])->name('perfil');
+    Route::put('/perfil', [TuristaDashboardController::class, 'atualizarPerfil'])->name('perfil.update');
+    Route::get('/favoritos', [TuristaDashboardController::class, 'favoritos'])->name('favoritos');
+    Route::post('/favoritos/toggle', [TuristaDashboardController::class, 'toggleFavorito'])->name('favoritos.toggle');
+    Route::get('/historico', [TuristaDashboardController::class, 'historico'])->name('historico');
+    Route::post('/visita/registrar', [TuristaDashboardController::class, 'registrarVisita'])->name('visita.registrar');
+    Route::get('/recomendacoes', [TuristaDashboardController::class, 'recomendacoes'])->name('recomendacoes');
+});
+
 // --- API JSON para Mapa Interativo ---
 Route::get('/api/atrativos-mapa', [MapaController::class, 'atrativosJson'])->name('api.atrativos.mapa');
 

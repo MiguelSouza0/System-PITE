@@ -154,6 +154,48 @@
                     </li>
                 </ul>
 
+                {{-- Ações do Turista --}}
+                @auth
+                    @if(auth()->user()->isTurista())
+                    <div class="d-grid gap-2 mb-3" style="border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                        {{-- Favoritar --}}
+                        <form method="POST" action="{{ route('turista.favoritos.toggle') }}" id="formFavoritar">
+                            @csrf
+                            <input type="hidden" name="favoritavel_id" value="{{ $atrativo->id }}">
+                            <input type="hidden" name="favoritavel_type" value="atrativo">
+                            @php $jaFavoritou = auth()->user()->favoritou($atrativo); @endphp
+                            <button type="submit" class="btn w-100 rounded-3 fw-bold {{ $jaFavoritou ? 'btn-danger' : 'btn-outline-danger' }}" style="border-radius: 14px !important;">
+                                <i class="bi bi-heart{{ $jaFavoritou ? '-fill' : '' }} me-1"></i>
+                                {{ $jaFavoritou ? 'Favoritado ❤️' : 'Adicionar aos Favoritos' }}
+                            </button>
+                        </form>
+
+                        {{-- Marcar como Visitado --}}
+                        @php $jaVisitou = auth()->user()->jaVisitou($atrativo); @endphp
+                        @if($jaVisitou)
+                            <button class="btn btn-success w-100 rounded-3 fw-bold" disabled style="border-radius: 14px !important;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Visita Registrada ✅
+                            </button>
+                        @else
+                            <form method="POST" action="{{ route('turista.visita.registrar') }}">
+                                @csrf
+                                <input type="hidden" name="atrativo_id" value="{{ $atrativo->id }}">
+                                <button type="submit" class="btn btn-outline-success w-100 rounded-3 fw-bold" style="border-radius: 14px !important;">
+                                    <i class="bi bi-geo-alt-fill me-1"></i> Marcar como Visitado
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                    @endif
+                @else
+                    <div class="mb-3 p-3 rounded-3 text-center" style="background: rgba(4,120,87,0.04); border: 1px dashed rgba(4,120,87,0.2);">
+                        <p class="small text-muted mb-2">Crie sua conta para favoritar e registrar visitas</p>
+                        <a href="{{ route('turista.registro') }}" class="btn btn-sm btn-pite">
+                            <i class="bi bi-person-plus me-1"></i> Criar Conta Gratuita
+                        </a>
+                    </div>
+                @endauth
+
                 <a href="{{ route('portal.roteiros') }}" class="btn btn-warning w-100 rounded-3 fw-bold mb-2">
                     <i class="bi bi-magic me-1"></i> Incluir no Meu Roteiro IA
                 </a>

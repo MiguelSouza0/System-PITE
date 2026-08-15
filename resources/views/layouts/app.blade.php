@@ -362,8 +362,57 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('portal.esg') }}">ESG</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('empreendedor.dashboard') }}" class="btn btn-nav-outline"><i class="bi bi-shop me-1"></i> Empreendedor</a>
-                    <a href="{{ route('admin.dashboard') }}" class="btn btn-nav-primary"><i class="bi bi-grid-1x2 me-1"></i> Gestão</a>
+                    @auth
+                        @if(auth()->user()->isTurista())
+                            {{-- Dropdown do Turista Logado --}}
+                            <div class="dropdown">
+                                <button class="btn d-flex align-items-center gap-2 dropdown-toggle" type="button" id="turistaDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(4,120,87,0.06); border-radius: 14px; padding: 6px 16px 6px 6px; border: 1.5px solid rgba(4,120,87,0.15);">
+                                    <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, var(--pite-gold), var(--pite-gold-warm)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.8rem; font-family: 'Outfit';">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </div>
+                                    <span class="fw-semibold small d-none d-md-inline" style="color: var(--pite-text);">{{ explode(' ', auth()->user()->name)[0] }}</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" style="min-width: 220px;">
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.dashboard') }}">
+                                            <i class="bi bi-grid-1x2 me-2" style="color: var(--pite-emerald);"></i> Meu Painel
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.favoritos') }}">
+                                            <i class="bi bi-heart me-2" style="color: var(--pite-coral);"></i> Favoritos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.historico') }}">
+                                            <i class="bi bi-clock-history me-2" style="color: var(--pite-sky);"></i> Histórico
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-3 py-2 px-3" href="{{ route('turista.perfil') }}">
+                                            <i class="bi bi-person-gear me-2" style="color: var(--pite-violet);"></i> Editar Perfil
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-2"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item rounded-3 py-2 px-3 text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        @elseif(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-nav-primary"><i class="bi bi-grid-1x2 me-1"></i> Gestão</a>
+                        @elseif(auth()->user()->isEmpreendedor())
+                            <a href="{{ route('empreendedor.dashboard') }}" class="btn btn-nav-outline"><i class="bi bi-shop me-1"></i> Empreendedor</a>
+                        @endif
+                    @else
+                        <a href="{{ route('turista.login') }}" class="btn btn-nav-outline"><i class="bi bi-person me-1"></i> Entrar</a>
+                        <a href="{{ route('turista.registro') }}" class="btn btn-nav-primary"><i class="bi bi-person-plus me-1"></i> Cadastre-se</a>
+                    @endauth
                 </div>
             </div>
         </div>
