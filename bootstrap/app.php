@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->validateCsrfTokens(except: [
             'api/*',
+            'roteiros-inteligentes/gerar',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
