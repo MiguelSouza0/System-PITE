@@ -108,17 +108,19 @@ class TuristaAuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            $user->load('perfil');
+
             if ($user->isTurista()) {
-                return redirect()->intended(route('turista.dashboard'));
+                return redirect()->route('turista.dashboard');
             }
             if ($user->isEmpreendedor()) {
-                return redirect()->intended(route('empreendedor.dashboard'));
+                return redirect()->route('empreendedor.dashboard');
             }
-            if ($user->isAdmin() || $user->isPrefeito() || $user->isSecretario() || $user->isServidor()) {
-                return redirect()->intended(route('admin.dashboard'));
+            if ($user->isPrefeito() || $user->isSecretario() || $user->isServidor() || $user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
             }
 
-            return redirect()->intended(route('portal.home'));
+            return redirect()->route('portal.home');
         }
 
         return back()->withErrors([
