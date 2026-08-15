@@ -61,7 +61,12 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <span class="badge px-3 py-2 mb-2" style="background:rgba(245,158,11,0.2); color:#fbbf24;">
-                    <i class="bi bi-bank2 me-1"></i> Painel de Políticas Públicas e Tomada de Decisão
+                    <i class="bi bi-bank2 me-1"></i>
+                    @if(auth()->user()->isSecretario())
+                        Secretaria Municipal de Turismo — Gestão Estratégica
+                    @else
+                        Gabinete do Executivo — Tomada de Decisão & Políticas Públicas
+                    @endif
                 </span>
                 <h2 class="fw-bold mb-0" style="font-family:'Outfit';">Inteligência Estratégica do Turismo</h2>
                 <p class="mb-0 small" style="opacity:0.8;">Evidências de fluxo, sazonalidade, perfil do turista e impacto econômico municipal</p>
@@ -270,9 +275,15 @@
                                 <td class="fw-semibold">{{ $at->nome }}</td>
                                 <td><span class="badge bg-light text-dark">{{ $at->categoria->nome ?? '—' }}</span></td>
                                 <td>
-                                    <span class="badge badge-status-{{ $at->ativo ? 'aprovado' : 'pendente' }} px-2 py-1 rounded-pill">
-                                        {{ $at->ativo ? 'Ativo' : 'Inativo' }}
-                                    </span>
+                                    @if($at->status_aprovacao === 'aprovado')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(4,120,87,0.12); color:#047857;">Aprovado</span>
+                                    @elseif($at->status_aprovacao === 'pendente')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(245,158,11,0.15); color:#d97706;">Pendente</span>
+                                    @elseif($at->status_aprovacao === 'suspenso')
+                                        <span class="badge px-2 py-1 rounded-pill" style="background:rgba(99,102,241,0.15); color:#6366f1;">Suspenso</span>
+                                    @else
+                                        <span class="badge bg-light text-dark px-2 py-1 rounded-pill">{{ $at->status_aprovacao ?? 'Ativo' }}</span>
+                                    @endif
                                 </td>
                                 <td class="text-muted small">{{ $at->created_at->format('d/m/Y') }}</td>
                             </tr>

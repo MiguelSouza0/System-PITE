@@ -131,24 +131,27 @@ Route::middleware(['auth', 'perfil:servidor'])->prefix('admin')->name('admin.')-
     Route::get('/eventos/{evento}/edit', [EventoAdminController::class, 'edit'])->name('eventos.edit');
     Route::put('/eventos/{evento}', [EventoAdminController::class, 'update'])->name('eventos.update');
     Route::delete('/eventos/{evento}', [EventoAdminController::class, 'destroy'])->name('eventos.destroy');
+});
 
-    // Gestão de Empreendedores (Aprovação / Validação de Selos)
+// Rotas de supervisão e aprovação: Prefeito e Secretário
+Route::middleware(['auth', 'perfil:prefeito,secretario'])->prefix('admin')->name('admin.')->group(function () {
+    // Gestão e Homologação de Empreendedores
     Route::post('/empreendedores/{empreendedor}/aprovar', [EmpreendedorAdminController::class, 'aprovar'])->name('empreendedores.aprovar');
     Route::post('/empreendedores/{empreendedor}/rejeitar', [EmpreendedorAdminController::class, 'rejeitar'])->name('empreendedores.rejeitar');
     Route::post('/empreendedores/{empreendedor}/revogar-selo', [EmpreendedorAdminController::class, 'revogarSelo'])->name('empreendedores.revogar');
-});
 
-// Rotas de aprovação: Prefeito e Secretário
-Route::middleware(['auth', 'perfil:prefeito,secretario'])->prefix('admin/aprovacao')->name('admin.aprovacao.')->group(function () {
-    Route::get('/pendentes', [AprovacaoController::class, 'pendentes'])->name('pendentes');
+    // Aprovações de Atrativos e Eventos
+    Route::prefix('aprovacao')->name('aprovacao.')->group(function () {
+        Route::get('/pendentes', [AprovacaoController::class, 'pendentes'])->name('pendentes');
 
-    // Aprovação de Atrativos
-    Route::post('/atrativos/{atrativo}/aprovar', [AprovacaoController::class, 'aprovarAtrativo'])->name('atrativos.aprovar');
-    Route::post('/atrativos/{atrativo}/rejeitar', [AprovacaoController::class, 'rejeitarAtrativo'])->name('atrativos.rejeitar');
-    Route::post('/atrativos/{atrativo}/suspender', [AprovacaoController::class, 'suspenderAtrativo'])->name('atrativos.suspender');
+        // Aprovação de Atrativos
+        Route::post('/atrativos/{atrativo}/aprovar', [AprovacaoController::class, 'aprovarAtrativo'])->name('atrativos.aprovar');
+        Route::post('/atrativos/{atrativo}/rejeitar', [AprovacaoController::class, 'rejeitarAtrativo'])->name('atrativos.rejeitar');
+        Route::post('/atrativos/{atrativo}/suspender', [AprovacaoController::class, 'suspenderAtrativo'])->name('atrativos.suspender');
 
-    // Aprovação de Eventos
-    Route::post('/eventos/{evento}/aprovar', [AprovacaoController::class, 'aprovarEvento'])->name('eventos.aprovar');
-    Route::post('/eventos/{evento}/rejeitar', [AprovacaoController::class, 'rejeitarEvento'])->name('eventos.rejeitar');
-    Route::post('/eventos/{evento}/suspender', [AprovacaoController::class, 'suspenderEvento'])->name('eventos.suspender');
+        // Aprovação de Eventos
+        Route::post('/eventos/{evento}/aprovar', [AprovacaoController::class, 'aprovarEvento'])->name('eventos.aprovar');
+        Route::post('/eventos/{evento}/rejeitar', [AprovacaoController::class, 'rejeitarEvento'])->name('eventos.rejeitar');
+        Route::post('/eventos/{evento}/suspender', [AprovacaoController::class, 'suspenderEvento'])->name('eventos.suspender');
+    });
 });
