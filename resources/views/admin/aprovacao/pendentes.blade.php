@@ -183,8 +183,8 @@
                 <div class="counter-icon mb-2" style="background: rgba(245,158,11,0.12);">
                     <i class="bi bi-hourglass-split" style="color: #d97706;"></i>
                 </div>
-                <div class="counter-value" style="color: #d97706;">{{ $contadores['atrativos_pendentes'] + $contadores['eventos_pendentes'] }}</div>
-                <div class="counter-label">Pendentes</div>
+                <div class="counter-value" style="color: #d97706;">{{ $contadores['atrativos_pendentes'] + $contadores['eventos_pendentes'] + $contadores['empreendedores_pendentes'] }}</div>
+                <div class="counter-label">Total Pendentes</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
@@ -192,17 +192,8 @@
                 <div class="counter-icon mb-2" style="background: rgba(4,120,87,0.12);">
                     <i class="bi bi-check-circle" style="color: #047857;"></i>
                 </div>
-                <div class="counter-value" style="color: #047857;">{{ $contadores['atrativos_aprovados'] + $contadores['eventos_aprovados'] }}</div>
-                <div class="counter-label">Aprovados</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="counter-card">
-                <div class="counter-icon mb-2" style="background: rgba(99,102,241,0.12);">
-                    <i class="bi bi-pause-circle" style="color: #6366f1;"></i>
-                </div>
-                <div class="counter-value" style="color: #6366f1;">{{ $contadores['atrativos_suspensos'] + $contadores['eventos_suspensos'] }}</div>
-                <div class="counter-label">Suspensos</div>
+                <div class="counter-value" style="color: #047857;">{{ $contadores['atrativos_aprovados'] + $contadores['eventos_aprovados'] + $contadores['empreendedores_aprovados'] }}</div>
+                <div class="counter-label">Total Aprovados</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
@@ -221,6 +212,24 @@
                 </div>
                 <div class="counter-value" style="color: #a855f7;">{{ $contadores['eventos_pendentes'] }}</div>
                 <div class="counter-label">Eventos Pend.</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="counter-card">
+                <div class="counter-icon mb-2" style="background: rgba(245,158,11,0.12);">
+                    <i class="bi bi-shop" style="color: #d97706;"></i>
+                </div>
+                <div class="counter-value" style="color: #d97706;">{{ $contadores['empreendedores_pendentes'] }}</div>
+                <div class="counter-label">Empresas Pend.</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="counter-card">
+                <div class="counter-icon mb-2" style="background: rgba(99,102,241,0.12);">
+                    <i class="bi bi-pause-circle" style="color: #6366f1;"></i>
+                </div>
+                <div class="counter-value" style="color: #6366f1;">{{ $contadores['atrativos_suspensos'] + $contadores['eventos_suspensos'] }}</div>
+                <div class="counter-label">Suspensos</div>
             </div>
         </div>
     </div>
@@ -408,6 +417,87 @@
                 <div class="empty-state">
                     <i class="bi bi-check-circle"></i>
                     <p class="mb-0">Nenhum evento pendente de aprovação.</p>
+                </div>
+            @endforelse
+
+            <hr class="my-4">
+
+            {{-- Empreendedores Pendentes (Selo Municipal) --}}
+            <div class="section-title">
+                <i class="bi bi-shop" style="color: #f59e0b;"></i>
+                Empreendedores Pendentes (Validação do Selo Municipal)
+                <span class="badge badge-pendente">{{ $empreendedoresPendentes->count() }}</span>
+            </div>
+
+            @forelse($empreendedoresPendentes as $emp)
+                <div class="item-card" style="border-left: 4px solid #f59e0b;">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div class="flex-grow-1">
+                            <div class="item-title">
+                                <i class="bi bi-shop me-1" style="color: #f59e0b;"></i>
+                                {{ $emp->nome_fantasia ?? $emp->razao_social }}
+                                <span class="badge bg-light text-dark border ms-2">{{ ucfirst($emp->tipo_servico) }}</span>
+                            </div>
+                            <div class="item-meta">
+                                <span class="me-3"><i class="bi bi-person-badge me-1"></i>{{ $emp->cnpj_cpf }}</span>
+                                @if($emp->endereco)
+                                    <span class="me-3"><i class="bi bi-pin-map me-1"></i>{{ $emp->endereco }} ({{ $emp->bairro ?? 'Centro' }})</span>
+                                @endif
+                                @if($emp->telefone)
+                                    <span class="me-3"><i class="bi bi-telephone me-1"></i>{{ $emp->telefone }}</span>
+                                @endif
+                                <span><i class="bi bi-clock me-1"></i>{{ $emp->created_at ? $emp->created_at->format('d/m/Y H:i') : '' }}</span>
+                            </div>
+                            <div class="item-desc">{{ $emp->descricao ?? 'Sem descrição informada.' }}</div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            {{-- Aprovar Empreendedor --}}
+                            <form action="{{ route('admin.empreendedores.aprovar', $emp) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-aprovar" title="Aprovar e conceder Selo Municipal">
+                                    <i class="bi bi-patch-check-fill me-1"></i>Aprovar & Selo
+                                </button>
+                            </form>
+
+                            {{-- Rejeitar Empreendedor (com modal) --}}
+                            <button type="button" class="btn btn-rejeitar" data-bs-toggle="modal" data-bs-target="#rejeitar-emp-{{ $emp->id }}">
+                                <i class="bi bi-x-lg me-1"></i>Rejeitar
+                            </button>
+
+                            {{-- Modal de Rejeição --}}
+                            <div class="modal fade" id="rejeitar-emp-{{ $emp->id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content rounded-4">
+                                        <div class="modal-header border-0">
+                                            <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Rejeitar Cadastro de Empreendedor</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form action="{{ route('admin.empreendedores.rejeitar', $emp) }}" method="POST">
+                                            @csrf
+                                            <div class="modal-body text-start">
+                                                <p class="text-muted">Informe o motivo da rejeição para <strong>"{{ $emp->nome_fantasia ?? $emp->razao_social }}"</strong>:</p>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Motivo da Rejeição *</label>
+                                                    <textarea name="motivo" class="form-control" rows="3" required placeholder="Descreva os ajustes documentais necessários..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>Confirmar Rejeição
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-state">
+                    <i class="bi bi-check-circle"></i>
+                    <p class="mb-0">Nenhum empreendedor pendente de aprovação.</p>
                 </div>
             @endforelse
         </div>

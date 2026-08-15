@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\AprovacaoController;
 use App\Http\Controllers\Admin\RelatorioController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Empreendedor\EmpreendedorDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,13 +90,9 @@ Route::get('/api/eventos-mapa', [MapaController::class, 'eventosJson'])->name('a
 
 // --- PAINEL DO EMPREENDEDOR LOCAL ---
 Route::middleware(['auth', 'perfil:empreendedor'])->prefix('empreendedor')->name('empreendedor.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('empreendedor.dashboard');
-    })->name('dashboard');
-
-    Route::get('/cadastro-estabelecimento', function () {
-        return view('empreendedor.cadastro');
-    })->name('cadastro');
+    Route::get('/dashboard', [EmpreendedorDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/cadastro-estabelecimento', [EmpreendedorDashboardController::class, 'create'])->name('cadastro');
+    Route::post('/cadastro-estabelecimento', [EmpreendedorDashboardController::class, 'store'])->name('cadastro.store');
 });
 
 

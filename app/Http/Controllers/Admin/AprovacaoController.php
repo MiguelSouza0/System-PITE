@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Atrativo;
 use App\Models\Auditoria;
+use App\Models\Empreendedor;
 use App\Models\Evento;
 use Illuminate\Http\Request;
 
 class AprovacaoController extends Controller
 {
     /**
-     * Lista todos os cadastros pendentes (atrativos + eventos) para aprovação do Prefeito.
+     * Lista todos os cadastros pendentes (atrativos, eventos e empreendedores) para homologação.
      */
     public function pendentes(Request $request)
     {
@@ -19,6 +20,7 @@ class AprovacaoController extends Controller
 
         $atrativosPendentes = collect();
         $eventosPendentes = collect();
+        $empreendedoresPendentes = collect();
 
         if ($filtroTipo === 'todos' || $filtroTipo === 'atrativos') {
             $atrativosPendentes = Atrativo::with('categoria')
@@ -34,6 +36,13 @@ class AprovacaoController extends Controller
                 ->get();
         }
 
+        if ($filtroTipo === 'todos' || $filtroTipo === 'empreendedores') {
+            $empreendedoresPendentes = Empreendedor::with('usuario')
+                ->where('status_aprovacao', 'pendente')
+                ->latest()
+                ->get();
+        }
+
         // Contadores gerais para cards de resumo
         $contadores = [
             'atrativos_pendentes' => Atrativo::pendente()->count(),
@@ -42,6 +51,8 @@ class AprovacaoController extends Controller
             'eventos_pendentes'   => Evento::pendente()->count(),
             'eventos_aprovados'   => Evento::aprovado()->count(),
             'eventos_suspensos'   => Evento::suspenso()->count(),
+            'empreendedores_pendentes' => Empreendedor::where('status_aprovacao', 'pendente')->count(),
+            'empreendedores_aprovados' => Empreendedor::where('status_aprovacao', 'aprovado')->count(),
         ];
 
         // Itens suspensos (para acompanhamento)
@@ -51,6 +62,7 @@ class AprovacaoController extends Controller
         return view('admin.aprovacao.pendentes', compact(
             'atrativosPendentes',
             'eventosPendentes',
+            'empreendedoresPendentes',
             'atrativosSuspensos',
             'eventosSuspensos',
             'contadores',
